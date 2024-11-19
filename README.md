@@ -24,16 +24,50 @@ resolution and (f) low resolution simulations of four HighResMIP models and the
 climatology from ERA5......
 
 
-Author list:
+INSTALLATION:
 ------------
-- Bock, L.: DLR, Germany; lisa.bock@dlr.de
-- Bellouin, N.: University of Reading, UK 
-- Eyring, V.: DLR., Germany
+To set up this project, follow these steps:
+
+1. Clone the repository
+
+```python
+git clone https://github.com/edsml-mh1123/AR6-WGI-Figure.git
+
+```
+
+2. Install the required packages
+   
+```bash
+pip install -r requirements.txt
+
+```
+
+3. Download the required data
+
+Before running the rest of the Jupyter notebooks, you need to download the required data. Run the provided Python script to handle this:
+
+```bash
+cd data
+
+python download_data.py
+```
+This contains 4 datasets: 
+
+- **Model Data:**
+  - Ferguson_fire_train: Training data obtained from wildfire simulations.
+  - Ferguson_fire_test: Testing data obtained from different simulations.
+  - Ferguson_fire_background: Model simulation data used for data assimilation.
+
+- **Satellite Data:**
+  - Ferguson_fire_obs: Observation data at different days after ignition (one trajectory).
 
 
-Publication sources:
+Input data: 
 --------------------
-Bock, L., Lauer, A., Schlund, M., Barreiro, M., Bellouin, N., Jones, C., Predoi, V., Meehl, G., Roberts, M., and Eyring, V.: Quantifying progress across different CMIP phases with the ESMValTool, Journal of Geophysical Research: Atmospheres, 125, e2019JD032321. https://doi.org/10.1029/2019JD032321
+fig3.2b_1pctCO2_CMIP5.csv, fig3.2b_1pctCO2_CMIP5_ensemble_mean.csv, fig3.2b_1pctCO2_CMIP6.csv,fig3.2b_1pctCO2_CMIP6_ensemble_mean.csv
+
+WCRP CMIP6: University of Arizona - Department of Geosciences (UA) MCM-UA-1-0 model output for the "ssp585" experiment
+(https://catalogue.ceda.ac.uk/uuid/1de487e6c3c943c3967cd2d8bdef8b72/)
 
 
 Expected image path:
@@ -51,3 +85,32 @@ Software description:
 Hardware description:
 ---------------------
 Machine used: Mistral
+
+
+Author list:
+------------
+- Bock, L.: DLR, Germany; lisa.bock@dlr.de
+- Bellouin, N.: University of Reading, UK 
+- Eyring, V.: DLR., Germany
+
+
+Publication sources:
+--------------------
+Bock, L., Lauer, A., Schlund, M., Barreiro, M., Bellouin, N., Jones, C., Predoi, V., Meehl, G., Roberts, M., and Eyring, V.: Quantifying progress across different CMIP phases with the ESMValTool, Journal of Geophysical Research: Atmospheres, 125, e2019JD032321. https://doi.org/10.1029/2019JD032321
+
+
+LICENCE:
+---------------------
+This project is licensed under the MIT Licence. See the [LICENCE](https://github.com/edsml-mh1123/AR6-WGI-Figure/blob/main/LICENSE) file for details. 
+
+
+How to cite:
+---------------------
+Figure 3.2 in IPCC, 2021: Chapter 3. In: Climate Change 2021: The Physical Science Basis. Contribution of Working Group I to 
+the Sixth Assessment Report of the Intergovernmental Panel on Climate Change [Eyring, V., N.P. Gillett, K.M. Achuta Rao, R. Barimalala,
+ M. Barreiro Parrillo, N. Bellouin, C. Cassou, P.J. Durack, Y. Kosaka, S. McGregor, S. Min, O. Morgenstern, and Y. Sun, 2021: Human 
+Influence on the Climate System. In Climate Change 2021: The Physical Science Basis. 
+Contribution of Working Group I to the Sixth Assessment Report of the Intergovernmental Panel on Climate Change [Masson-Delmotte, V., 
+P. Zhai, A. Pirani, S.L. Connors, C. Péan, S. Berger, N. Caud, Y. Chen, L. Goldfarb, M.I. Gomis, M. Huang, K. Leitzell, E. Lonnoy, 
+J.B.R. Matthews, T.K. Maycock, T. Waterfield, O. Yelekçi, R. Yu, and B. Zhou (eds.)]. 
+Cambridge University Press, Cambridge, United Kingdom and New York, NY, USA, pp. 423–552, doi: 10.1017/9781009157896.005 .]
