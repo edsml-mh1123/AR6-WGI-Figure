@@ -62,13 +62,24 @@ This contains 4 datasets:
   - Ferguson_fire_obs: Observation data at different days after ignition (one trajectory).
 
 
-Input data: 
+Final Data: 
 --------------------
+**Definition:** This is the final dataset prepared for visualization. It is derived from the processed data and contains only the variables and structure necessary for creating specific plots or graphs.
+
 fig3.2b_1pctCO2_CMIP5.csv, fig3.2b_1pctCO2_CMIP5_ensemble_mean.csv, fig3.2b_1pctCO2_CMIP6.csv,fig3.2b_1pctCO2_CMIP6_ensemble_mean.csv
 
-WCRP CMIP6: University of Arizona - Department of Geosciences (UA) MCM-UA-1-0 model output for the "ssp585" experiment
+Other data: 
+--------------------
+Definition: Please provide a clear explanation of the relationship between these datasets and the Final Data, along with the relevant code.
+
+1. WCRP CMIP6: University of Arizona - Department of Geosciences (UA) MCM-UA-1-0 model output for the "ssp585" experiment
 (https://catalogue.ceda.ac.uk/uuid/1de487e6c3c943c3967cd2d8bdef8b72/)
 
+WCRP CMIP6 data can be downloaded via `download_data.py` and the final data is obtained by running the `data_processing.py`.
+
+2. xxxxx
+
+3. xxxxx
 
 Expected image path:
 --------------------
