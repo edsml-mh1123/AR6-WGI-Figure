@@ -64,7 +64,7 @@ This contains 4 datasets:
 
 Final Data: 
 --------------------
-**Definition:** This is the final dataset prepared for visualization. It is derived from the processed data and contains only the variables and structure necessary for creating specific plots or graphs.
+**Definition:** This is the final dataset prepared for visualisation. It is derived from the processed data and contains only the variables and structure necessary for creating specific figure.
 
 Panel a
 - fig3.2a_1pctCO2_CMIP5.csv
@@ -75,7 +75,7 @@ Panel b
 - fig3.2b_1pctCO2_CMIP6.csv
 - fig3.2b_1pctCO2_CMIP6_ensemble_mean.csv
 
-Other data: 
+Intermediate data: 
 --------------------
 Definition: Please provide a clear explanation of the relationship between these datasets and **Final Data**, along with the relevant code.
 
