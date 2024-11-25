@@ -66,7 +66,14 @@ Final Data:
 --------------------
 **Definition:** This is the final dataset prepared for visualization. It is derived from the processed data and contains only the variables and structure necessary for creating specific plots or graphs.
 
-fig3.2b_1pctCO2_CMIP5.csv, fig3.2b_1pctCO2_CMIP5_ensemble_mean.csv, fig3.2b_1pctCO2_CMIP6.csv,fig3.2b_1pctCO2_CMIP6_ensemble_mean.csv
+Panel a
+- fig3.2a_1pctCO2_CMIP5.csv
+
+Panel b
+- fig3.2b_1pctCO2_CMIP5.csv
+- fig3.2b_1pctCO2_CMIP5_ensemble_mean.csv
+- fig3.2b_1pctCO2_CMIP6.csv
+- fig3.2b_1pctCO2_CMIP6_ensemble_mean.csv
 
 Other data: 
 --------------------
