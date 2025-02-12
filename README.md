@@ -8,8 +8,23 @@ From the IPCC Working Group I Contribution to the Sixth Assessment Report: Chapt
 ![Figure 3.3](/ar6_wg1_chap3_figure3_3_surface_temp_model_bias.png?raw=true)
 
 
-Description:
-------------
+## Contents
+
+- [Contents](#contents)
+- [Description](#description)
+- [Installation](#installation)
+- [Final data](#final-data)
+- [Intermediate data](#intermediate-data)
+- [Expected image path](#expected-image-path)
+- [Software description](#software-description)
+- [Hardware description](#hardware-description)
+- [Author list](#author-list)
+- [Publication sources](#publication-sources)
+- [How to cite](#How-to-cite)
+
+
+## Description
+
 The figure shows the annual-mean surface (2 m) air temperature (°C) for the 
 period 1995–2014. (a) Multi-model (ensemble) mean constructed with one 
 realization of the CMIP6 historical experiment from each model. (b) Multi-
@@ -24,8 +39,8 @@ resolution and (f) low resolution simulations of four HighResMIP models and the
 climatology from ERA5......
 
 
-INSTALLATION:
-------------
+## Installation
+
 To set up this project, follow these steps:
 
 1. Clone the repository
@@ -51,19 +66,9 @@ cd data
 
 python download_data.py
 ```
-This contains 4 datasets: 
 
-- **Model Data:**
-  - Ferguson_fire_train: Training data obtained from wildfire simulations.
-  - Ferguson_fire_test: Testing data obtained from different simulations.
-  - Ferguson_fire_background: Model simulation data used for data assimilation.
+## Final data
 
-- **Satellite Data:**
-  - Ferguson_fire_obs: Observation data at different days after ignition (one trajectory).
-
-
-Final Data: 
---------------------
 **Definition:** This is the final dataset prepared for visualisation. It is derived from the processed data and contains only the variables and structure necessary for creating specific figure.
 
 Panel a
@@ -75,8 +80,8 @@ Panel b
 - fig3.2b_1pctCO2_CMIP6.csv
 - fig3.2b_1pctCO2_CMIP6_ensemble_mean.csv
 
-Intermediate data: 
---------------------
+## Intermediate data
+
 Definition: Please provide a clear explanation of the relationship between these datasets and **Final Data**, along with the relevant code.
 
 1. WCRP CMIP6: University of Arizona - Department of Geosciences (UA) MCM-UA-1-0 model output for the "ssp585" experiment
@@ -88,42 +93,37 @@ WCRP CMIP6 data can be downloaded via `download_data.py` and the final data is o
 
 3. xxxxx
 
-Expected image path:
---------------------
+## Expected image path
+
 - recipe_ipccwg1ar6ch3_atmosphere_YYYYMMDD_HHMMSS/plots/fig_3_3_cmip5/fig_3_3/model_bias_tas_annualclim_CMIP5.eps
 - recipe_ipccwg1ar6ch3_atmosphere_YYYYMMDD_HHMMSS/plots/fig_3_3_cmip6/fig_3_3/model_bias_tas_annualclim_CMIP6.eps
 
 
-Software description:
----------------------
+## Software description
+
 - ESMValTool environment file: [IPCC_environments/ar6_newcore_lisa_conda_environment.yml](https://github.com/ipcc-wgi/ESMValTool-AR6-OriginalCode-FinalFigures/blob/main/IPCC_environments/ar6_newcore_lisa_conda_environment.yml)
 - pip file: [IPCC_environments/ar6_newcore_lisa_pip_environment.txt](https://github.com/ipcc-wgi/ESMValTool-AR6-OriginalCode-FinalFigures/blob/main/IPCC_environments/ar6_newcore_lisa_pip_environment.txt)
 
 
-Hardware description:
----------------------
+## Hardware description
+
 Machine used: Mistral
 
 
-Author list:
-------------
+## Author list
+
 - Bock, L.: DLR, Germany; lisa.bock@dlr.de
 - Bellouin, N.: University of Reading, UK 
 - Eyring, V.: DLR., Germany
 
 
-Publication sources:
---------------------
+## Publication sources
+
 Bock, L., Lauer, A., Schlund, M., Barreiro, M., Bellouin, N., Jones, C., Predoi, V., Meehl, G., Roberts, M., and Eyring, V.: Quantifying progress across different CMIP phases with the ESMValTool, Journal of Geophysical Research: Atmospheres, 125, e2019JD032321. https://doi.org/10.1029/2019JD032321
 
 
-LICENCE:
----------------------
-This project is licensed under the MIT Licence. See the [LICENCE](https://github.com/edsml-mh1123/AR6-WGI-Figure/blob/main/LICENSE) file for details. 
+## How to cite
 
-
-How to cite:
----------------------
 Figure 3.2 in IPCC, 2021: Chapter 3. In: Climate Change 2021: The Physical Science Basis. Contribution of Working Group I to 
 the Sixth Assessment Report of the Intergovernmental Panel on Climate Change [Eyring, V., N.P. Gillett, K.M. Achuta Rao, R. Barimalala,
  M. Barreiro Parrillo, N. Bellouin, C. Cassou, P.J. Durack, Y. Kosaka, S. McGregor, S. Min, O. Morgenstern, and Y. Sun, 2021: Human 
