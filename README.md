@@ -6,7 +6,7 @@ SURFACE AIR TEMPERATURE - MODEL BIAS
 Figure number: 3.3
 From the IPCC Working Group I Contribution to the Sixth Assessment Report: Chapter 3
 
-![Figure 3.3](/ar6_wg1_chap3_figure3_3_surface_temp_model_bias.png?raw=true)
+![Figure 3.3](/Figure_asset/ar6_wg1_chap3_figure3_3_surface_temp_model_bias.png?raw=true)
 
 
 ## Contents
