@@ -21,16 +21,3 @@ doi: "10.5281/zenodo.1234567"  # Add a DOI if available (e.g., from Zenodo)
 identifiers:
   - type: "doi"
     value: "10.5281/zenodo.1234567"
-
-preferred-citation:
-  type: "article"
-  authors:
-    - family-names: "Your Last Name"
-      given-names: "Your First Name"
-  title: "Title of Your Paper or Project"
-  journal: "Journal Name (if applicable)"
-  year: "2025"
-  volume: "1"
-  issue: "1"
-  pages: "1-10"
-  doi: "10.1000/example-doi"
