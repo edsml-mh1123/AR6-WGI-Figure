@@ -41,20 +41,28 @@ climatology from ERA5......
 
 ## Installation
 
-To set up this project, follow these steps:
+### Option 1: Run on Binder (No Installation Needed)
+You can quickly run this project in a live, interactive environment without any installation. Click the button below to launch the project on Binder:
 
-1. Clone the repository
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/edsml-mh1123/AR6-WGI-Figure/main)
 
-```python
-git clone https://github.com/edsml-mh1123/AR6-WGI-Figure.git
+This will automatically install the necessary dependencies and launch the Jupyter Notebooks in your browser.
 
-```
+### Option 2: Local Installation
 
-2. Install the required packages
+If you prefer to run the project locally, follow these steps:
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/edsml-mh1123/AR6-WGI-Figure.git
+   cd AR6-WGI-Figure
+
+2. Create and activate the Conda environment:
    
 ```bash
-pip install -r requirements.txt
+conda env create -f environment.yml
 
+conda activate fig3.3_env
 ```
 
 3. Download the required data
