@@ -1,66 +1,68 @@
 datasets:
-  - id: dataset1
-    name: "Final Processed Data a"
-    description: "This dataset contains the final processed results for the XYZ analysis."
+  - id: dataset1  # Unique identifier for the dataset
+    name: "Final Processed Data A"  # Descriptive name of the dataset
+    description: "This dataset contains the final processed results for the XYZ analysis."  # Brief explanation of the dataset purpose
     source:
       input_data:
-        - path: "data/Input_data/input_data_01.csv"
-          description: "Original raw data for XYZ analysis."
-          data_format: "csv"
-          data_size: "1GB"
-          collected_on: "2025-01-10"
-        - path: "raw_data/raw_additional_info.csv"
-          description: "Additional raw data used to augment XYZ analysis."
+        - path: "data/input_data/input_data_01.csv"  # Path to the input data
+          doi: "10.5281/zenodo.1234567"  # Replace with actual DOI if available
+          description: "Primary raw data collected for XYZ analysis."
+          data_format: "csv"  # File format (e.g., csv, json, netCDF)
+          data_size: "1GB"  # Approximate size of the file
+        - path: "data/raw_data/raw_additional_info.csv"
+          doi: "10.5281/zenodo.1234567"  # Replace with actual DOI
+          description: "Additional raw data supplementing XYZ analysis."
           data_format: "csv"
           data_size: "500MB"
-          collected_on: "2025-01-15"
       intermediate_data:
-        - path: "data/Intermedia_data/intermedia_data_01.csv"
-          description: "Step 1 of XYZ data processing (cleaning and filtering)."
+        - path: "data/intermediate_data/intermediate_data_01.csv"  # Processed step 1 output
+          doi: "10.5281/zenodo.1234567"  # Replace with actual DOI if available
+          description: "Step 1 of XYZ processing: Data cleaning and filtering."
           data_format: "csv"
           data_size: "800MB"
-          processed_on: "2025-02-01"
-        - path: "processed_data/intermediate_xyz_step2.csv"
-          description: "Step 2 of XYZ data processing (feature engineering)."
+          processed_by: "intermediate_processing_script.py"  # Optional: Specify the script used for processing
+        - path: "data/intermediate_data/intermediate_xyz_step2.csv"
+          doi: "10.5281/zenodo.1234567"  # Replace with actual DOI
+          description: "Step 2 of XYZ processing: Feature engineering."
           data_format: "csv"
           data_size: "750MB"
-          processed_on: "2025-02-05"
+          processed_by: "intermediate_processing_script.py"  # Optional: Specify the script used for processing
       final_data:
-        path: "data/final_xyz.csv"
-        description: "The final processed dataset used for generating figures and analysis."
+        path: "data/final_data/final_xyz.csv"  # Final dataset used for analysis and visualization
+        doi: "10.5281/zenodo.1234567"  # Replace with actual DOI
+        description: "Final cleaned and processed dataset for figures and analysis."
         data_format: "csv"
         data_size: "500MB"
-        processed_by: "final_processing_script.py"
-        processed_on: "2025-03-05"
+        processed_by: "final_processing_script.py"  # Optional: Specify the script used for processing
     references:
-      - type: "figure"
-        figure_id: "fig1"
-        description: "Figure 1 uses the final processed dataset for XYZ analysis."
-  
-  - id: dataset2
-    name: "Final Processed Data b"
-    description: "Processed results from the ABC dataset used in the second analysis."
+      - type: "figure"  # Type of reference (e.g., figure, table, report)
+        figure_id: "fig1"  # ID linking this dataset to a specific figure
+        description: "Figure 1 uses this dataset as its primary source for the XYZ analysis."
+
+  - id: dataset2  # Unique identifier for another dataset
+    name: "Final Processed Data B"
+    description: "Final processed results derived from the ABC dataset for secondary analysis."
     source:
       input_data:
-        - path: "data/Input_data/input_data_02.csv"
-          description: "Original raw data for ABC analysis."
+        - path: "data/input_data/input_data_02.csv"
+          doi: "10.5281/zenodo.2345678"  # Replace with actual DOI
+          description: "Primary raw data collected for ABC analysis."
           data_format: "csv"
           data_size: "500MB"
-          collected_on: "2025-01-20"
       intermediate_data:
-        - path: "data/Intermedia_data/intermedia_data_02.csv"
-          description: "Step 1 of ABC data processing (cleaning)."
+        - path: "data/intermediate_data/intermediate_data_02.csv"
+          doi: "10.5281/zenodo.2345678"  # Replace with actual DOI
+          description: "Step 1 of ABC processing: Data cleaning and transformation."
           data_format: "csv"
           data_size: "450MB"
-          processed_on: "2025-02-10"
       final_data:
-        path: "data/Figure_data/panel_b/gmst_changes_model_and_obs.csv"
-        description: "The final processed ABC dataset used for generating figures."
+        path: "data/final_data/abc_final_results.csv"  # Final processed dataset path
+        doi: "10.5281/zenodo.2345678"  # Replace with actual DOI
+        description: "Final cleaned dataset used for figure generation."
         data_format: "csv"
         data_size: "300MB"
-        processed_by: "abc_analysis_script.py"
-        processed_on: "2025-03-06"
+        processed_by: "abc_analysis_script.py"  # Optional: Specify script used
     references:
       - type: "figure"
         figure_id: "fig2"
-        description: "Figure 2 uses the final ABC results dataset."
+        description: "Figure 2 is based on this processed ABC dataset."
