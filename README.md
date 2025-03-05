@@ -14,12 +14,9 @@ From the IPCC Working Group I Contribution to the Sixth Assessment Report: Chapt
 - [Contents](#contents)
 - [Description](#description)
 - [Installation](#installation)
-- [Final data](#final-data)
-- [Intermediate data](#intermediate-data)
 - [Expected image path](#expected-image-path)
 - [Software description](#software-description)
 - [Hardware description](#hardware-description)
-- [Author list](#author-list)
 - [Publication sources](#publication-sources)
 - [How to cite](#how-to-cite)
 
@@ -68,32 +65,6 @@ cd data
 python download_data.py
 ```
 
-## Final data
-
-**Definition:** This is the final dataset prepared for visualisation. It is derived from the processed data and contains only the variables and structure necessary for creating specific figure.
-
-Panel a
-- fig3.2a_1pctCO2_CMIP5.csv
-
-Panel b
-- fig3.2b_1pctCO2_CMIP5.csv
-- fig3.2b_1pctCO2_CMIP5_ensemble_mean.csv
-- fig3.2b_1pctCO2_CMIP6.csv
-- fig3.2b_1pctCO2_CMIP6_ensemble_mean.csv
-
-## Intermediate data
-
-Definition: Please provide a clear explanation of the relationship between these datasets and **Final Data**, along with the relevant code.
-
-1. WCRP CMIP6: University of Arizona - Department of Geosciences (UA) MCM-UA-1-0 model output for the "ssp585" experiment
-(https://catalogue.ceda.ac.uk/uuid/1de487e6c3c943c3967cd2d8bdef8b72/)
-
-WCRP CMIP6 data can be downloaded via `download_data.py` and the final data is obtained by running the `data_processing.py`.
-
-2. xxxxx
-
-3. xxxxx
-
 ## Expected image path
 
 - recipe_ipccwg1ar6ch3_atmosphere_YYYYMMDD_HHMMSS/plots/fig_3_3_cmip5/fig_3_3/model_bias_tas_annualclim_CMIP5.eps
@@ -109,13 +80,6 @@ WCRP CMIP6 data can be downloaded via `download_data.py` and the final data is o
 ## Hardware description
 
 Machine used: Mistral
-
-
-## Author list
-
-- Bock, L.: DLR, Germany; lisa.bock@dlr.de
-- Bellouin, N.: University of Reading, UK 
-- Eyring, V.: DLR., Germany
 
 
 ## Publication sources
