@@ -1,0 +1,38 @@
+figures:
+  - id: fig3.3a
+    title: "Figure 3.3: ar6_wg1_chap3_figure3_3_surface_temp_model_bias"
+    description: "The figure shows the annual-mean surface (2 m) air temperature (°C) for the 
+    period 1995–2014. (a) Multi-model (ensemble) mean constructed with one 
+    realization of the CMIP6 historical experiment from each model. (b) Multi-
+    model mean bias, defined as the difference between the CMIP6 multi-model mean
+    and the climatology of the Fifth generation of ECMWF atmospheric reanalyses 
+    of the global climate (ERA5). (c) Multi-model mean of the root mean square error
+    calculated over all months separately and averaged with respect to the 
+    climatology from ERA5. (d) Multi-model-mean bias as the difference between the 
+    CMIP6 multi-model mean and the climatology from ERA5. Also shown is the multi-
+    model mean bias as the difference between the multi-model mean of (e) high
+    resolution and (f) low resolution simulations of four HighResMIP models and the 
+    climatology from ERA5......"
+    data_sources:
+      - path: "data/final_data.csv"
+        description: "Processed dataset used for the figure."
+    parameters:
+      - name: "Temperature"
+        value: 1
+        description: "sea surface temperature"
+    generated_by: "script_name.py"
+    figure_format: "png"
+    figure_size: "1024x768"
+  - id: fig3.3b
+    title: "Figure 3.3b: Another Visualization"
+    description: "This figure shows the results of analysis on ABC dataset."
+    data_sources:
+      - path: "data/abc_results.csv"
+        description: "Processed results used for this figure."
+    parameters:
+      - name: "Alpha"
+        value: 0.1
+        description: "Parameter alpha used in the analysis."
+    generated_by: "another_script.py"
+    figure_format: "pdf"
+    figure_size: "800x600"
