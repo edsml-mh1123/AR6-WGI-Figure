@@ -16,11 +16,14 @@ From the IPCC Working Group I Contribution to the Sixth Assessment Report: Chapt
 - [Contents](#contents)
 - [Description](#description)
 - [Installation](#installation)
+  - [Option 1: Run on Binder (No Installation Needed)](#option-1-run-on-binder-no-installation-needed)
+  - [Option 2: Local Installation](#option-2-local-installation)
 - [Expected image path](#expected-image-path)
-- [Software description](#software-description)
-- [Hardware description](#hardware-description)
+- [Software and hardware information](#software-and-hardware-information)
 - [Publication sources](#publication-sources)
-- [How to cite](#how-to-cite)
+- [How to cite](#how-to-cite) 
+  - [Figure Citation](#figure-citation)
+  - [Repository Citation](#repository-citation)
 
 
 ## Description
@@ -75,21 +78,19 @@ cd data
 python download_data.py
 ```
 
+
 ## Expected image path
 
 - recipe_ipccwg1ar6ch3_atmosphere_YYYYMMDD_HHMMSS/plots/fig_3_3_cmip5/fig_3_3/model_bias_tas_annualclim_CMIP5.eps
 - recipe_ipccwg1ar6ch3_atmosphere_YYYYMMDD_HHMMSS/plots/fig_3_3_cmip6/fig_3_3/model_bias_tas_annualclim_CMIP6.eps
 
 
-## Software description
+## Software and Hardware Information
 
-- ESMValTool environment file: [IPCC_environments/ar6_newcore_lisa_conda_environment.yml](https://github.com/ipcc-wgi/ESMValTool-AR6-OriginalCode-FinalFigures/blob/main/IPCC_environments/ar6_newcore_lisa_conda_environment.yml)
-- pip file: [IPCC_environments/ar6_newcore_lisa_pip_environment.txt](https://github.com/ipcc-wgi/ESMValTool-AR6-OriginalCode-FinalFigures/blob/main/IPCC_environments/ar6_newcore_lisa_pip_environment.txt)
+The software and hardware details for the system are included in the `system_description.yml` file. This file contains the following:
 
-
-## Hardware description
-
-Machine used: Mistral
+- **Software descriptions** (e.g., environment files for ESMValTool and pip)
+- **Hardware descriptions** (e.g., machine used)
 
 
 ## Publication sources
