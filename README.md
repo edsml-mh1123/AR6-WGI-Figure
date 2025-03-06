@@ -99,6 +99,18 @@ Bock, L., Lauer, A., Schlund, M., Barreiro, M., Bellouin, N., Jones, C., Predoi,
 
 ## How to cite
 
+If you use this repository or any of its contents in your work, please cite it appropriately.
+
+### Repository Citation
+This repository includes a `CITATION.cff` file for citation. You can generate a citation in your preferred format using:
+
+```bash
+cffconvert --format bibtex
+```
+
+### Figure Citation
+If you use Figure 3.3 from the IPCC report included in this repository, please cite it as:
+
 Figure 3.2 in IPCC, 2021: Chapter 3. In: Climate Change 2021: The Physical Science Basis. Contribution of Working Group I to 
 the Sixth Assessment Report of the Intergovernmental Panel on Climate Change [Eyring, V., N.P. Gillett, K.M. Achuta Rao, R. Barimalala,
  M. Barreiro Parrillo, N. Bellouin, C. Cassou, P.J. Durack, Y. Kosaka, S. McGregor, S. Min, O. Morgenstern, and Y. Sun, 2021: Human 
