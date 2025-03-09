@@ -1,13 +1,13 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it using the metadata below."
 title: "Your Project Name"
-authors:
+contact point:  # contributor, authors
   - family-names: "Your Last Name"
     given-names: "Your First Name"
     orcid: "0000-0000-0000-0000"  # Replace with your ORCID if available
     affiliation: "Your Institution"
     
-date-released: "2025-03-05"  # Adjust to match the release date
+publication date: "2025-03-05"  # Adjust to match the release date
 version: "1.0.0"  # Update with your current project version
 repository-code: "https://github.com/yourusername/your-repo"
 license: "Apache-2.0"  # Update based on your actual license
