@@ -7,34 +7,89 @@ datasets:
         - path: "data/input_data/input_data_01.csv"  # Path to the input data
           doi: "10.5281/zenodo.1234567"  # Replace with actual DOI if available
           description: "Primary raw data collected for XYZ analysis."
-          data_format: "csv"  # File format (e.g., csv, json, netCDF)
-          data_size: "1GB"  # Approximate size of the file
+          coverage:
+            temporal:
+              start_date: "1980-01-01"
+              end_date: "2000-12-31"
+              temporal_resolution: "Monthly"
+            spatial:
+              spatial_aggregation: "Global"
+              spatial_resolution: "1° x 1°"
+              geoLocationBox:
+                west_bound_longitude: -180
+                east_bound_longitude: 180
+                south_bound_latitude: -90
+                north_bound_latitude: 90
         - path: "data/raw_data/raw_additional_info.csv"
           doi: "10.5281/zenodo.1234567"  # Replace with actual DOI
           description: "Additional raw data supplementing XYZ analysis."
-          data_format: "csv"
-          data_size: "500MB"
+          coverage:
+            temporal:
+              start_date: "1980-01-01"
+              end_date: "2000-12-31"
+              temporal_resolution: "Monthly"
+            spatial:
+              spatial_aggregation: "Global"
+              spatial_resolution: "1° x 1°"
+              geoLocationBox:
+                west_bound_longitude: -180
+                east_bound_longitude: 180
+                south_bound_latitude: -90
+                north_bound_latitude: 90
       intermediate_data:
         - path: "data/intermediate_data/intermediate_data_01.csv"  # Processed step 1 output
           doi: "10.5281/zenodo.1234567"  # Replace with actual DOI if available
           description: "Step 1 of XYZ processing: Data cleaning and filtering."
-          data_format: "csv"
-          data_size: "800MB"
           processed_by: "intermediate_processing_script.py"  # Optional: Specify the script used for processing
+          coverage:
+            temporal:
+              start_date: "1980-01-01"
+              end_date: "2000-12-31"
+              temporal_resolution: "Monthly"
+            spatial:
+              spatial_aggregation: "Global"
+              spatial_resolution: "1° x 1°"
+              geoLocationBox:
+                west_bound_longitude: -180
+                east_bound_longitude: 180
+                south_bound_latitude: -90
+                north_bound_latitude: 90
         - path: "data/intermediate_data/intermediate_xyz_step2.csv"
           doi: "10.5281/zenodo.1234567"  # Replace with actual DOI
           description: "Step 2 of XYZ processing: Feature engineering."
-          data_format: "csv"
-          data_size: "750MB"
           processed_by: "intermediate_processing_script.py"  # Optional: Specify the script used for processing
+          coverage:
+            temporal:
+              start_date: "1980-01-01"
+              end_date: "2000-12-31"
+              temporal_resolution: "Monthly"
+            spatial:
+              spatial_aggregation: "Global"
+              spatial_resolution: "1° x 1°"
+              geoLocationBox:
+                west_bound_longitude: -180
+                east_bound_longitude: 180
+                south_bound_latitude: -90
+                north_bound_latitude: 90
       final_data:
-        path: "data/final_data/final_xyz.csv"  # Final dataset used for analysis and visualization
-        doi: "10.5281/zenodo.1234567"  # Replace with actual DOI
-        description: "Final cleaned and processed dataset for figures and analysis."
-        data_format: "csv"
-        data_size: "500MB"
-        processed_by: "final_processing_script.py"  # Optional: Specify the script used for processing
-    references:
+        - path: "data/final_data/final_xyz.csv"  # Final dataset used for analysis and visualization
+          doi: "10.5281/zenodo.1234567"  # Replace with actual DOI
+          description: "Final cleaned and processed dataset for figures and analysis."
+          processed_by: "final_processing_script.py"  # Optional: Specify the script used for processing
+          coverage:
+              temporal:
+                start_date: "1980-01-01"
+                end_date: "2000-12-31"
+                temporal_resolution: "Monthly"
+              spatial:
+                spatial_aggregation: "Global"
+                spatial_resolution: "1° x 1°"
+                geoLocationBox:
+                  west_bound_longitude: -180
+                  east_bound_longitude: 180
+                  south_bound_latitude: -90
+                  north_bound_latitude: 90
+    Is Referenced By:
       - type: "figure"  # Type of reference (e.g., figure, table, report)
         figure_id: "fig1"  # ID linking this dataset to a specific figure
         description: "Figure 1 uses this dataset as its primary source for the XYZ analysis."
@@ -47,22 +102,55 @@ datasets:
         - path: "data/input_data/input_data_02.csv"
           doi: "10.5281/zenodo.2345678"  # Replace with actual DOI
           description: "Primary raw data collected for ABC analysis."
-          data_format: "csv"
-          data_size: "500MB"
+          coverage:
+            temporal:
+              start_date: "1980-01-01"
+              end_date: "2000-12-31"
+              temporal_resolution: "Monthly"
+            spatial:
+              spatial_aggregation: "Global"
+              spatial_resolution: "1° x 1°"
+              geoLocationBox:
+                west_bound_longitude: -180
+                east_bound_longitude: 180
+                south_bound_latitude: -90
+                north_bound_latitude: 90
       intermediate_data:
         - path: "data/intermediate_data/intermediate_data_02.csv"
           doi: "10.5281/zenodo.2345678"  # Replace with actual DOI
           description: "Step 1 of ABC processing: Data cleaning and transformation."
-          data_format: "csv"
-          data_size: "450MB"
+          coverage:
+            temporal:
+              start_date: "1980-01-01"
+              end_date: "2000-12-31"
+              temporal_resolution: "Monthly"
+            spatial:
+              spatial_aggregation: "Global"
+              spatial_resolution: "1° x 1°"
+              geoLocationBox:
+                west_bound_longitude: -180
+                east_bound_longitude: 180
+                south_bound_latitude: -90
+                north_bound_latitude: 90
       final_data:
-        path: "data/final_data/abc_final_results.csv"  # Final processed dataset path
-        doi: "10.5281/zenodo.2345678"  # Replace with actual DOI
-        description: "Final cleaned dataset used for figure generation."
-        data_format: "csv"
-        data_size: "300MB"
-        processed_by: "abc_analysis_script.py"  # Optional: Specify script used
-    references:
+        - path: "data/final_data/abc_final_results.csv"  # Final processed dataset path
+          doi: "10.5281/zenodo.2345678"  # Replace with actual DOI
+          description: "Final cleaned dataset used for figure generation."
+          processed_by: "abc_analysis_script.py"  # Optional: Specify script used
+          coverage:
+              temporal:
+                start_date: "1980-01-01"
+                end_date: "2000-12-31"
+                temporal_resolution: "Monthly"
+              spatial:
+                spatial_aggregation: "Global"
+                spatial_resolution: "1° x 1°"
+                geoLocationBox:
+                  west_bound_longitude: -180
+                  east_bound_longitude: 180
+                  south_bound_latitude: -90
+                  north_bound_latitude: 90
+    Is Referenced By:
       - type: "figure"
         figure_id: "fig2"
         description: "Figure 2 is based on this processed ABC dataset."
