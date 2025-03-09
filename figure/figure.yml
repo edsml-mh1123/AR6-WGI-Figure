@@ -1,3 +1,6 @@
+identifier: "10.1234/example.figure3.3"  #such as: DOI for the whole figure
+alternate identifier: "..."
+
 figures:
   - id: fig3.3a
     title: "Figure 3.3: ar6_wg1_chap3_figure3_3_surface_temp_model_bias"
@@ -13,26 +16,15 @@ figures:
     model mean bias as the difference between the multi-model mean of (e) high
     resolution and (f) low resolution simulations of four HighResMIP models and the 
     climatology from ERA5......"
+    keywords: surface, temperature, ...
     data_sources:
       - path: "data/Figure_data/panel_a/SPM1_1-2000_recon.csv"
         description: "Processed dataset used for the figure 3.3 a ..."
-    parameters:
-      - name: "Temperature"
-        value: 1
-        description: "sea surface temperature"
     generated_by: "code/code_for_figure/panel_a.ipynb"
-    figure_format: "png"
-    figure_size: "1024x768"
   - id: fig3.3b
     title: "Figure 3.3b: Another Visualization"
     description: "This figure shows the results of analysis on ABC dataset."
     data_sources:
       - path: "data/Figure_data/panel_b/gmst_changes_model_and_obs.csv"
         description: "Processed results used for this figure..."
-    parameters:
-      - name: "Alpha"
-        value: 0.1
-        description: "Parameter alpha used in the analysis."
     generated_by: "/.../another_script.py"
-    figure_format: "pdf"
-    figure_size: "800x600"
