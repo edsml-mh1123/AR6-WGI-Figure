@@ -24,6 +24,7 @@ figures:
   - id: fig3.3b
     title: "Figure 3.3b: Another Visualization"
     description: "This figure shows the results of analysis on ABC dataset."
+    keywords: surface, temperature, ...
     data_sources:
       - path: "data/Figure_data/panel_b/gmst_changes_model_and_obs.csv"
         description: "Processed results used for this figure..."

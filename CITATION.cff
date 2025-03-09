@@ -1,5 +1,4 @@
 cff-version: 1.2.0
-message: "If you use this software, please cite it using the metadata below."
 title: "Your Project Name"
 contact point:  # contributor, authors
   - family-names: "Your Last Name"
@@ -11,11 +10,6 @@ publication date: "2025-03-05"  # Adjust to match the release date
 version: "1.0.0"  # Update with your current project version
 repository-code: "https://github.com/yourusername/your-repo"
 license: "Apache-2.0"  # Update based on your actual license
-
-keywords:
-  - seasurface temperature
-  - data science
-  - figure metadata
 
 doi: "10.5281/zenodo.1234567"  # Add a DOI if available (e.g., from Zenodo)
 identifiers:
