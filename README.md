@@ -5,9 +5,6 @@ SURFACE AIR TEMPERATURE - MODEL BIAS
 ![GitHub release](https://img.shields.io/github/v/release/edsml-mh1123/AR6-WGI-Figure?logo=github)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/edsml-mh1123/AR6-WGI-Figure/update)
 
-## Disclaimer
-Please note that figures in this repository may differ from those in the published version due to the editorial process. The repository contains the latest available versions prior to publication.
-
 Figure number: 3.3
 From the IPCC Working Group I Contribution to the Sixth Assessment Report: Chapter 3
 
@@ -27,7 +24,7 @@ From the IPCC Working Group I Contribution to the Sixth Assessment Report: Chapt
 - [How to cite](#how-to-cite) 
   - [Figure Citation](#figure-citation)
   - [Repository Citation](#repository-citation)
-
+- [Disclaimer](#disclaimer)
 
 ## Description
 
@@ -123,3 +120,6 @@ Contribution of Working Group I to the Sixth Assessment Report of the Intergover
 P. Zhai, A. Pirani, S.L. Connors, C. Péan, S. Berger, N. Caud, Y. Chen, L. Goldfarb, M.I. Gomis, M. Huang, K. Leitzell, E. Lonnoy, 
 J.B.R. Matthews, T.K. Maycock, T. Waterfield, O. Yelekçi, R. Yu, and B. Zhou (eds.)]. 
 Cambridge University Press, Cambridge, United Kingdom and New York, NY, USA, pp. 423–552, doi: 10.1017/9781009157896.005 .]
+
+## Disclaimer
+Please note that figures in this repository may differ from those in the published version due to the editorial process. The repository contains the latest available versions prior to publication.
