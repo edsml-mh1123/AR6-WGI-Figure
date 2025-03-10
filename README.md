@@ -5,10 +5,13 @@ SURFACE AIR TEMPERATURE - MODEL BIAS
 ![GitHub release](https://img.shields.io/github/v/release/edsml-mh1123/AR6-WGI-Figure?logo=github)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/edsml-mh1123/AR6-WGI-Figure/update)
 
+## Disclaimer
+Please note that figures in this repository may differ from those in the published version due to the editorial process. The repository contains the latest available versions prior to publication.
+
 Figure number: 3.3
 From the IPCC Working Group I Contribution to the Sixth Assessment Report: Chapter 3
 
-![Figure 3.3](/Figure_asset/ar6_wg1_chap3_figure3_3_surface_temp_model_bias.png?raw=true)
+![Figure 3.3](/figure/ar6_wg1_chap3_figure3_3_surface_temp_model_bias.png?raw=true)
 
 
 ## Contents
