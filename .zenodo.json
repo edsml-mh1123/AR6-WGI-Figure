@@ -1,0 +1,29 @@
+{
+    "title": "SURFACE AIR TEMPERATURE - MODEL BIAS",
+    "upload_type": "software",
+    "description": "As TSU. Try to build repositories with the data and incorporate the metadata required by the data centre. This repository contains scripts for data analysis and visualization.",
+    "creators": [
+      {
+        "name": "Mai Hong",
+        "affiliation": "University of Paris-Saclay",
+        "orcid": "0000-0001-2345-6789"
+      }
+    ],
+    "keywords": ["data science", "machine learning", "visualization", "Python", "R", "Java", "C"],
+    "license": "MIT",
+    "access_right": "open",
+    "version": "1.0.0",
+    "doi": "",
+    "publication_date": "2025-03-12",
+    "related_identifiers": [
+      {
+        "relation": "isSupplementTo",
+        "identifier": "https://github.com/your-username/your-repo"
+      }
+    ],
+    "communities": [
+      {
+        "identifier": "opensource"
+      }
+    ]
+  }
