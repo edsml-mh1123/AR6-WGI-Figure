@@ -1,12 +1,14 @@
 SURFACE AIR TEMPERATURE - MODEL BIAS
 ====================================
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6656093.svg)](https://doi.org/10.5281/zenodo.6656093)   ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6656093.svg)](https://doi.org/10.5281/zenodo.6656093)   ![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)
 
+![GitHub release](https://img.shields.io/github/v/release/edsml-mh1123/AR6-WGI-Figure?logo=github)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/edsml-mh1123/AR6-WGI-Figure/update)
 
 Figure number: 3.3
 From the IPCC Working Group I Contribution to the Sixth Assessment Report: Chapter 3
 
-![Figure 3.3](/ar6_wg1_chap3_figure3_3_surface_temp_model_bias.png?raw=true)
+![Figure 3.3](/figure/ar6_wg1_chap3_figure3_3_surface_temp_model_bias.png?raw=true)
 
 
 ## Contents
@@ -14,15 +16,15 @@ From the IPCC Working Group I Contribution to the Sixth Assessment Report: Chapt
 - [Contents](#contents)
 - [Description](#description)
 - [Installation](#installation)
-- [Final data](#final-data)
-- [Intermediate data](#intermediate-data)
+  - [Option 1: Run on Binder (No Installation Needed)](#option-1-run-on-binder-no-installation-needed)
+  - [Option 2: Local Installation](#option-2-local-installation)
 - [Expected image path](#expected-image-path)
-- [Software description](#software-description)
-- [Hardware description](#hardware-description)
-- [Author list](#author-list)
+- [Software and hardware information](#software-and-hardware-information)
 - [Publication sources](#publication-sources)
-- [How to cite](#how-to-cite)
-
+- [How to cite](#how-to-cite) 
+  - [Figure Citation](#figure-citation)
+  - [Repository Citation](#repository-citation)
+- [Disclaimer](#disclaimer)
 
 ## Description
 
@@ -42,20 +44,28 @@ climatology from ERA5......
 
 ## Installation
 
-To set up this project, follow these steps:
+### Option 1: Run on Binder (No Installation Needed)
+You can quickly run this project in a live, interactive environment without any installation. Click the button below to launch the project on Binder:
 
-1. Clone the repository
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/edsml-mh1123/AR6-WGI-Figure/main)
 
-```python
-git clone https://github.com/edsml-mh1123/AR6-WGI-Figure.git
+This will automatically install the necessary dependencies and launch the Jupyter Notebooks in your browser.
 
-```
+### Option 2: Local Installation
 
-2. Install the required packages
+If you prefer to run the project locally, follow these steps:
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/edsml-mh1123/AR6-WGI-Figure.git
+   cd AR6-WGI-Figure
+
+2. Create and activate the Conda environment:
    
 ```bash
-pip install -r requirements.txt
+conda env create -f environment.yml
 
+conda activate fig3.3_env
 ```
 
 3. Download the required data
@@ -68,31 +78,6 @@ cd data
 python download_data.py
 ```
 
-## Final data
-
-**Definition:** This is the final dataset prepared for visualisation. It is derived from the processed data and contains only the variables and structure necessary for creating specific figure.
-
-Panel a
-- fig3.2a_1pctCO2_CMIP5.csv
-
-Panel b
-- fig3.2b_1pctCO2_CMIP5.csv
-- fig3.2b_1pctCO2_CMIP5_ensemble_mean.csv
-- fig3.2b_1pctCO2_CMIP6.csv
-- fig3.2b_1pctCO2_CMIP6_ensemble_mean.csv
-
-## Intermediate data
-
-Definition: Please provide a clear explanation of the relationship between these datasets and **Final Data**, along with the relevant code.
-
-1. WCRP CMIP6: University of Arizona - Department of Geosciences (UA) MCM-UA-1-0 model output for the "ssp585" experiment
-(https://catalogue.ceda.ac.uk/uuid/1de487e6c3c943c3967cd2d8bdef8b72/)
-
-WCRP CMIP6 data can be downloaded via `download_data.py` and the final data is obtained by running the `data_processing.py`.
-
-2. xxxxx
-
-3. xxxxx
 
 ## Expected image path
 
@@ -100,22 +85,12 @@ WCRP CMIP6 data can be downloaded via `download_data.py` and the final data is o
 - recipe_ipccwg1ar6ch3_atmosphere_YYYYMMDD_HHMMSS/plots/fig_3_3_cmip6/fig_3_3/model_bias_tas_annualclim_CMIP6.eps
 
 
-## Software description
+## Software and Hardware Information
 
-- ESMValTool environment file: [IPCC_environments/ar6_newcore_lisa_conda_environment.yml](https://github.com/ipcc-wgi/ESMValTool-AR6-OriginalCode-FinalFigures/blob/main/IPCC_environments/ar6_newcore_lisa_conda_environment.yml)
-- pip file: [IPCC_environments/ar6_newcore_lisa_pip_environment.txt](https://github.com/ipcc-wgi/ESMValTool-AR6-OriginalCode-FinalFigures/blob/main/IPCC_environments/ar6_newcore_lisa_pip_environment.txt)
+The software and hardware details for the system are included in the `system_description.yml` file. This file contains the following:
 
-
-## Hardware description
-
-Machine used: Mistral
-
-
-## Author list
-
-- Bock, L.: DLR, Germany; lisa.bock@dlr.de
-- Bellouin, N.: University of Reading, UK 
-- Eyring, V.: DLR., Germany
+- **Software descriptions** (e.g., environment files for ESMValTool and pip)
+- **Hardware descriptions** (e.g., machine used)
 
 
 ## Publication sources
@@ -125,6 +100,18 @@ Bock, L., Lauer, A., Schlund, M., Barreiro, M., Bellouin, N., Jones, C., Predoi,
 
 ## How to cite
 
+If you use this repository or any of its contents in your work, please cite it appropriately.
+
+### Repository Citation
+This repository includes a `CITATION.cff` file for citation. You can generate a citation in your preferred format using:
+
+```bash
+cffconvert --format bibtex
+```
+
+### Figure Citation
+If you use Figure 3.3 from the IPCC report included in this repository, please cite it as:
+
 Figure 3.2 in IPCC, 2021: Chapter 3. In: Climate Change 2021: The Physical Science Basis. Contribution of Working Group I to 
 the Sixth Assessment Report of the Intergovernmental Panel on Climate Change [Eyring, V., N.P. Gillett, K.M. Achuta Rao, R. Barimalala,
  M. Barreiro Parrillo, N. Bellouin, C. Cassou, P.J. Durack, Y. Kosaka, S. McGregor, S. Min, O. Morgenstern, and Y. Sun, 2021: Human 
@@ -133,3 +120,6 @@ Contribution of Working Group I to the Sixth Assessment Report of the Intergover
 P. Zhai, A. Pirani, S.L. Connors, C. Péan, S. Berger, N. Caud, Y. Chen, L. Goldfarb, M.I. Gomis, M. Huang, K. Leitzell, E. Lonnoy, 
 J.B.R. Matthews, T.K. Maycock, T. Waterfield, O. Yelekçi, R. Yu, and B. Zhou (eds.)]. 
 Cambridge University Press, Cambridge, United Kingdom and New York, NY, USA, pp. 423–552, doi: 10.1017/9781009157896.005 .]
+
+## Disclaimer
+Please note that figures in this repository may differ from those in the published version due to the editorial process. The repository contains the latest available versions prior to publication.
