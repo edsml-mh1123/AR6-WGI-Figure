@@ -30,41 +30,26 @@ jobs:
 
         - name: Create ZIP of code folder
           run: zip -r code.zip code/
-    
-        - name: Get existing Zenodo deposition (if concept exists)
-          id: get_existing_deposition
-          env:
-            ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
-          run: |
-            RESPONSE=$(curl -s -X GET "https://sandbox.zenodo.org/api/deposit/depositions" \
-            -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
-            CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.[] | select(.metadata.prereserve_doi != null) | .conceptdoi' | head -n 1)
-            echo "Concept ID found: $CONCEPT_ID"
-            echo "CONCEPT_ID=$CONCEPT_ID" >> $GITHUB_ENV
 
-        - name: Create a new Zenodo deposition
-          id: create_deposition
-          env:
-            ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
-          run: |
-            RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions" \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
-            -d @.zenodo.json)
-            DEPOSITION_ID=$(echo $RESPONSE | jq -r '.id')
-            echo "Created new deposition with ID: $DEPOSITION_ID"
-            echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
-    
-        - name: Use existing deposition (if concept exists)
-          if: env.CONCEPT_ID != ''
-          id: use_existing_deposition
+        - name: Get or create Zenodo deposition
+          id: zenodo_deposition
           env:
             ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
           run: |
             RESPONSE=$(curl -s -X GET "https://sandbox.zenodo.org/api/deposit/depositions" \
-            -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
-            DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.[] | select(.metadata.prereserve_doi != null) | .id' | head -n 1)
-            echo "Using existing deposition with ID: $DEPOSITION_ID"
+              -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
+            CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.[] | select(.metadata.prereserve_doi != null) | .conceptdoi' | head -n 1)
+            if [ -z "$CONCEPT_ID" ]; then
+              RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions" \
+                -H "Content-Type: application/json" \
+                -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
+                -d @.zenodo.json)
+              DEPOSITION_ID=$(echo $RESPONSE | jq -r '.id')
+              echo "Created new deposition with ID: $DEPOSITION_ID"
+            else 
+              DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.[] | select(.metadata.prereserve_doi != null) | .id' | head -n 1)
+              echo "Using existing deposition with ID: $DEPOSITION_ID"
+            fi
             echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
 
         - name: Upload the ZIP file to Zenodo
@@ -83,14 +68,15 @@ jobs:
             curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/actions/submit" \
               -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN"
             echo "Submission completed, kept in draft mode (not published)."
-        
-        
-        # - name: Publish the Zenodo deposition
-        #   env:
-        #     ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
-        #   run: |
-        #     curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/actions/publish" \
-        #     -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN"
+
+        - name: Publish the Zenodo deposition
+          if: success()
+          env:
+            ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
+          run: |
+            curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/actions/publish" \
+              -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN"
+            echo "Deposition published successfully."
 
         # - uses: ipcc-ar7/publish-zenodo@v1.9
         #   env:
