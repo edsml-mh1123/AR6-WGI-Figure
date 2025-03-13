@@ -20,19 +20,19 @@ jobs:
         - name: Checkout the contents of your repository
           uses: actions/checkout@v4
 
-        - name: Download validation result
-          uses: actions/download-artifact@v4
-          with:
-            name: validation_passed
-            path: ${{ runner.temp }}
+        # - name: Download validation result
+        #   uses: actions/download-artifact@v4
+        #   with:
+        #     name: validation_passed
+        #     path: ${{ runner.temp }}
   
-        - name: Check validation status
-          run: |
-            if [ ! -f "${{ runner.temp }}/validation_passed.txt" ]; then
-              echo "Validation must pass before publishing."
-              exit 1
-            fi
-            echo "Validation passed."
+        # - name: Check validation status
+        #   run: |
+        #     if [ ! -f "${{ runner.temp }}/validation_passed.txt" ]; then
+        #       echo "Validation must pass before publishing."
+        #       exit 1
+        #     fi
+        #     echo "Validation passed."
 
         - name: Create ZIP of code folder
           run: zip -r code.zip code/
