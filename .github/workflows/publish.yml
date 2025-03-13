@@ -2,7 +2,7 @@ name: Publish to Zenodo
 on:
 
   workflow_run:
-    workflows: ["Validate Workflow"]
+    workflows: ["Validate Code"]
     types:
       - completed
 
