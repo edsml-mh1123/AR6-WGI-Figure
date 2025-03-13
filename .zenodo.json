@@ -5,20 +5,20 @@
     "creators": [
       {
         "name": "Mai Hong",
-        "affiliation": "University of Paris-Saclay",
+        "affiliation": "IPCC AR7 WGI TSU",
         "orcid": "0000-0001-2345-6789"
       }
     ],
-    "keywords": ["data science", "machine learning", "visualization", "Python", "R", "Java", "C"],
-    "license": "MIT",
+    "keywords": ["sea surface temperature","visualization", "Python"],
+    "license": "Apache 2.0",
     "access_right": "open",
     "version": "1.0.0",
     "doi": "",
-    "publication_date": "2025-03-12",
+    "publication_date": "2025-03-13",
     "related_identifiers": [
       {
         "relation": "isSupplementTo",
-        "identifier": "https://github.com/your-username/your-repo"
+        "identifier": "https://github.com/edsml-mh1123/AR6-WGI-Figure"
       }
     ],
     "communities": [
