@@ -24,8 +24,8 @@ jobs:
         run: |
           RESPONSE=$(curl -s -X GET "https://sandbox.zenodo.org/api/deposit/depositions" \
             -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
-          CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.[] | select(.metadata.prereserve_doi != null) | .conceptdoi' | head -n 1)
           echo "Zenodo API Response: $RESPONSE"
+          CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.[] | select(.metadata.prereserve_doi != null) | .conceptdoi' | head -n 1)
           echo "Concept ID: $CONCEPT_ID"
           if [ -z "$CONCEPT_ID" ]; then
             RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions" \
@@ -39,7 +39,7 @@ jobs:
             echo "Using existing deposition with ID: $DEPOSITION_ID"
           fi
           echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
-
+        
       - name: Upload the ZIP file to Zenodo
         env:
           ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
@@ -49,9 +49,17 @@ jobs:
             exit 1
           fi
           curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/files" \
-          -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
-          -H "Content-Type: multipart/form-data" \
-          -F "file=@code.zip;filename=code.zip"
+            -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
+            -F "file=@code.zip;filename=code.zip"
+  
+      - name: Check if code.zip exists
+        run: |
+          if [ -f "code.zip" ]; then
+            echo "code.zip exists."
+          else
+            echo "code.zip does not exist."
+            exit 1
+          fi
 
       - name: Keep in Draft Mode
         env:
