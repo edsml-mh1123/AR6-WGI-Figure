@@ -25,6 +25,8 @@ jobs:
           RESPONSE=$(curl -s -X GET "https://sandbox.zenodo.org/api/deposit/depositions" \
             -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
           CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.[] | select(.metadata.prereserve_doi != null) | .conceptdoi' | head -n 1)
+          echo "Zenodo API Response: $RESPONSE"
+          echo "Concept ID: $CONCEPT_ID"
           if [ -z "$CONCEPT_ID" ]; then
             RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions" \
               -H "Content-Type: application/json" \
@@ -42,6 +44,10 @@ jobs:
         env:
           ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
         run: |
+          if [ ! -f "code.zip" ]; then
+            echo "Error: code.zip file does not exist!"
+            exit 1
+          fi
           curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/files" \
           -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
           -H "Content-Type: multipart/form-data" \
