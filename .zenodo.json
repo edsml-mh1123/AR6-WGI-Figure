@@ -1,7 +1,7 @@
 {
   "metadata": {
     "title": "SURFACE AIR TEMPERATURE - MODEL BIAS",
-    "upload_type": "software",
+    "upload_type": "dataset",
     "description": "This repository contains scripts for data analysis and visualization.",
     "creators": [
       {
@@ -11,7 +11,7 @@
       }
     ],
     "keywords": ["sea surface temperature", "visualization", "Python"],
-    "license": "Apache 2.0",
+    "license": "Apache-2.0",
     "version": "1.0.0",
     "access_right": "open",
     "publication_date": "2025-03-13",
