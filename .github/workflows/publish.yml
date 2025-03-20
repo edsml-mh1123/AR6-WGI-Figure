@@ -17,6 +17,16 @@ jobs:
       - name: Create ZIP of code folder
         run: zip -r code.zip code/
 
+      - name: Debug `.zenodo.json` existence
+        run: |
+          if [ ! -f ".zenodo.json" ]; then
+            echo "Error: .zenodo.json does not exist!"
+            exit 1
+          else
+            echo "Contents of .zenodo.json:"
+            cat .zenodo.json
+          fi
+
       - name: Get or create Zenodo deposition
         id: zenodo_deposition
         env:
