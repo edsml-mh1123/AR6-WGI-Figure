@@ -60,6 +60,19 @@ jobs:
           fi
           echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
 
+      - name: Delete existing code.zip (if exists)
+        env:
+          ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
+        run: |
+          FILE_ID=$(curl -s -X GET "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/files" \
+            -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" | jq -r '.[] | select(.filename == "code.zip") | .id')
+
+          if [ -n "$FILE_ID" ]; then
+            curl -s -X DELETE "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/files/$FILE_ID" \
+              -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN"
+            echo "Deleted existing code.zip"
+          fi
+
       - name: Upload the ZIP file to Zenodo
         env:
           ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
