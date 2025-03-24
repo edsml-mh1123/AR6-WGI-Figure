@@ -9,7 +9,7 @@ on:
 jobs:
   publish-fig:
     runs-on: ubuntu-latest
-    name: Publish figure to Zenodo
+    name: Publish code to Zenodo
     steps:
       - name: Checkout the contents of your repository
         uses: actions/checkout@v4
