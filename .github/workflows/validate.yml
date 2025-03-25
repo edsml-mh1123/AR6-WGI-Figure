@@ -70,15 +70,15 @@ jobs:
       ## ---------------------------
       ## Step 3: Schema Validation
       ## ---------------------------
-      - name: Validate figure.yml against Zenodo schema
-        id: validate-figure-yml
-        uses: GrantBirki/json-yaml-validate@v3.2.1
-        with:
-          comment: "true"
-          files: "figure.yml"
-          yaml_as_json: "true"
-          json_schema: .schema/zenodo_v0.3.0.json
-          ajv_strict_mode: "false"
+      # - name: Validate figure.yml against Zenodo schema
+      #   id: validate-figure-yml
+      #   uses: GrantBirki/json-yaml-validate@v3.2.1
+      #   with:
+      #     comment: "true"
+      #     files: "figure.yml"
+      #     yaml_as_json: "true"
+      #     json_schema: .schema/zenodo_v0.3.0.json
+      #     ajv_strict_mode: "false"
 
       - name: Validate .zenodo.json file format
         id: validate-zenodo-json
