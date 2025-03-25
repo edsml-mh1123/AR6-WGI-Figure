@@ -1,15 +1,15 @@
 name: Repository Validation
 
-# on:
-#   pull_request:
-#     branches:
-#       - main
-#   workflow_dispatch:
-
 on:
-  push:  # Trigger validation on push to any branch
-  pull_request:  # Trigger validation on pull requests
-  workflow_dispatch:  # Allow manual trigger
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+# on:
+#   push:  # Trigger validation on push to any branch
+#   pull_request:  # Trigger validation on pull requests
+#   workflow_dispatch:  # Allow manual trigger
 
 permissions:
   contents: read
