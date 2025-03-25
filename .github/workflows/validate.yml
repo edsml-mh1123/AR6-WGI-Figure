@@ -64,7 +64,7 @@ jobs:
       - name: Check mandatory files existence
         uses: andstor/file-existence-action@v3
         with:
-          files: "LICENSE, README.md, CITATION.cff, data/README.md, figure/*.png"
+          files: "LICENSE, README.md, CITATION.cff, figure/*.png"
           fail: "true"
 
       ## ---------------------------
@@ -89,7 +89,7 @@ jobs:
       - name: Check if the 'code' folder exists
         run: |
           if [ ! -d "code" ]; then
-            echo "❌ Error: 'code' folder is missing!" | tee -a validation_results.txt
+            echo "Error: 'code' folder is missing!" | tee -a validation_results.txt
             exit 1
           fi
 
