@@ -1,10 +1,15 @@
 name: Repository Validation
 
+# on:
+#   pull_request:
+#     branches:
+#       - main
+#   workflow_dispatch:
+
 on:
-  pull_request:
-    branches:
-      - main
-  workflow_dispatch:
+  push:  # Trigger validation on push to any branch
+  pull_request:  # Trigger validation on pull requests
+  workflow_dispatch:  # Allow manual trigger
 
 permissions:
   contents: read
@@ -29,15 +34,29 @@ jobs:
           regex: '^ar7-(\w+)-(\w+)-(\w+)-(\w+)$'
 
       - name: Create JSON file with repo name components
-        run: echo "{\"report\":\"${{ steps.regex-match.outputs.group1 }}\",\"draft\":\"${{ steps.regex-match.outputs.group2 }}\",\"chapter\":\"${{ steps.regex-match.outputs.group3 }}\",\"figure\":\"${{ steps.regex-match.outputs.group4 }}\"}" > repo_name.json
+        if: steps.regex-match.outputs.match != ''
+        run: |
+          echo '{
+            "report": "${{ steps.regex-match.outputs.group1 }}",
+            "draft": "${{ steps.regex-match.outputs.group2 }}",
+            "chapter": "${{ steps.regex-match.outputs.group3 }}",
+            "figure": "${{ steps.regex-match.outputs.group4 }}"
+          }' > repo_name.json
 
       - name: Validate repository name schema
         id: validate-repo-name
+        if: steps.regex-match.outputs.match != ''
         uses: GrantBirki/json-yaml-validate@v3.2.1
         with:
           comment: "true"
           files: "repo_name.json"
           json_schema: .schema/repo_name.json
+
+      - name: Fail if repository name is invalid
+        if: steps.regex-match.outputs.match == ''
+        run: |
+          echo "Repository name does not match the required format: AR6-<report>-<draft>-<chapter>-<figure>"
+          exit 1
 
       ## ---------------------------
       ## Step 2: Mandatory Files Checks
