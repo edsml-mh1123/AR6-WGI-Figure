@@ -1,4 +1,4 @@
-name: Validate Code
+name: Repository Validation
 
 on:
   pull_request:
@@ -6,35 +6,106 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pull-requests: write  # enable write permissions for pull request comments
+
 jobs:
   validate:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Validate JSON file
+      ## ---------------------------
+      ## Step 1: Repo Name Validation
+      ## ---------------------------
+      - name: Validate repository name format
+        id: regex-match
+        uses: actions-ecosystem/action-regex-match@v2
+        with:
+          text: ${{ github.event.repository.name }}
+          regex: '^ar7-(\w+)-(\w+)-(\w+)-(\w+)$'
+
+      - name: Create JSON file with repo name components
+        run: echo "{\"report\":\"${{ steps.regex-match.outputs.group1 }}\",\"draft\":\"${{ steps.regex-match.outputs.group2 }}\",\"chapter\":\"${{ steps.regex-match.outputs.group3 }}\",\"figure\":\"${{ steps.regex-match.outputs.group4 }}\"}" > repo_name.json
+
+      - name: Validate repository name schema
+        id: validate-repo-name
+        uses: GrantBirki/json-yaml-validate@v3.2.1
+        with:
+          comment: "true"
+          files: "repo_name.json"
+          json_schema: .schema/repo_name.json
+
+      ## ---------------------------
+      ## Step 2: Mandatory Files Checks
+      ## ---------------------------
+      - name: Check mandatory files existence
+        uses: andstor/file-existence-action@v3
+        with:
+          files: "LICENSE, README.md, CITATION.cff, data/README.md, figure/*.png"
+          fail: "true"
+
+      ## ---------------------------
+      ## Step 3: Schema Validation
+      ## ---------------------------
+      - name: Validate figure.yml against Zenodo schema
+        id: validate-figure
+        uses: GrantBirki/json-yaml-validate@v3.2.1
+        with:
+          comment: "true"
+          files: "figure.yml"
+          yaml_as_json: "true"
+          json_schema: .schema/zenodo_v0.3.0.json
+          ajv_strict_mode: "false"
+
+      - name: Validate .zenodo.json file format
         run: jq empty .zenodo.json
 
-      - name: Check if the code folder exists
+      ## ---------------------------
+      ## Step 4: Code Folder Validation
+      ## ---------------------------
+      - name: Check if the 'code' folder exists
         run: |
           if [ ! -d "code" ]; then
-            echo "Error: 'code' folder is missing!"
+            echo "❌ Error: 'code' folder is missing!" | tee -a validation_results.txt
             exit 1
           fi
 
       - name: Check if 'code' folder contains files
         run: |
           if [ -z "$(ls -A code)" ]; then
-            echo "Error: 'code' folder is empty!"
+            echo "Error: 'code' folder is empty!" | tee -a validation_results.txt
             exit 1
           fi
 
-      - name: Mark validation as passed
-        run: echo "Validation passed!" > validation_passed.txt
+      ## ---------------------------
+      ## Step 5: Upload Validation Report
+      ## ---------------------------
+      - name: Generate validation summary
+        run: echo "All validation checks passed!" > validation_results.txt
 
-      - name: Upload validation result
+      - name: Upload validation results
         uses: actions/upload-artifact@v4
         with:
-          name: validation_passed
-          path: validation_passed.txt
+          name: validation_results
+          path: validation_results.txt
+
+      ## ---------------------------
+      ## Step 6: Provide User Feedback in PR Comments
+      ## ---------------------------
+      - name: Add PR comment on validation results
+        if: github.event_name == 'pull_request'
+        uses: mshick/add-pr-comment@v2
+        with:
+          message: |
+            **Validation Check Summary**
+            
+            - **Repo Name Validation:** ${{ steps.validate-repo-name.outcome }}
+            - **Mandatory Files Check:** Passed
+            - **Schema Validation:** ${{ steps.validate-figure.outcome }}
+            - **Code Folder Check:** Passed
+            
+            If there are errors above, **please fix them before merging!**
