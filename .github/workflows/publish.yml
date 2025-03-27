@@ -32,20 +32,27 @@ jobs:
       - name: Create a new concept and store its ID
         if: ${{ steps.concept_check.outputs.concept_id == '' }}  # Only run if no concept ID was found
         run: |
+          # Define the JSON data as a variable
+          jsonData='{
+            "metadata": {
+              "title": "Your project title",  # Replace with the actual project title
+              "upload_type": "software",  # Type of upload (software, dataset, etc.)
+              "description": "Description of your project"  # Project description
+            }
+          }'
+
+          # Log the JSON data for debugging purposes
+          echo "JSON Data: $jsonData"
+
           # Use curl to create a new concept on Zenodo's sandbox environment
-          response=$(curl -X POST https://sandbox.zenodo.org/api/deposit/depositions \
+          response=$(curl -s -X POST https://sandbox.zenodo.org/api/deposit/depositions \
             -H "Authorization: Bearer $ZENODO_SANDBOX_ACCESS_TOKEN" \
             -H "Content-Type: application/json" \
-            -d '{
-              "metadata": {
-                "title": "Your project title",  # Replace with the actual project title
-                "upload_type": "software",  # Type of upload (software, dataset, etc.)
-                "description": "Description of your project"  # Project description
-              }
-            }')
+            -d "$jsonData")
 
-          # Log the response to help debug if something goes wrong
+          # Log the API response to help debug if something goes wrong
           echo "API Response: $response"
+
           # Extract the concept ID (DOI) from the API response using jq
           concept_id=$(echo "$response" | jq -r .conceptdoi)
 
