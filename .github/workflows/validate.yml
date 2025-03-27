@@ -157,7 +157,8 @@ jobs:
             
             - **Repo Name Validation:** ${{ steps.validate-repo-name.outcome }}
             - **Mandatory Files Check:** Passed
-            - **Schema Validation:** ${{ steps.validate-figure.outcome }}
+            - **Schema Validation:** ${{ steps.validate-zenodo-json.outcome == 'success' && 'Passed' || 'Failed' }}
             - **Code Folder Check:** Passed
             
             If there are errors above, **please fix them before merging!**
+      
