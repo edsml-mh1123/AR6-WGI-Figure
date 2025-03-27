@@ -1,56 +1,76 @@
 name: Publish to Zenodo
 
 on:
-  push:
+  pull_request:
     branches:
-      - main
-  workflow_dispatch:
+      - main  # Trigger on pull requests targeting the 'main' branch
+  workflow_dispatch:  # Allows manual trigger from GitHub Actions UI
 
 jobs:
   publish:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout the contents of your repository
-        uses: actions/checkout@v4
+    runs-on: ubuntu-latest  # The job will run on the latest Ubuntu environment
 
+    steps:
+      # Step 1: Checkout the contents of the repository
+      - name: Checkout the contents of your repository
+        uses: actions/checkout@v4  # This step checks out the repository so the workflow can access it
+
+      # Step 2: Check if a concept ID already exists in the repository
       - name: Check if concept exists
         id: concept_check
         run: |
+          # Check if 'concept_id.txt' exists. If it does, output the concept ID.
           if [[ -f "concept_id.txt" ]]; then
             echo "Concept ID found: $(cat concept_id.txt)"
             echo "::set-output name=concept_id::$(cat concept_id.txt)"
           else
+            # If no concept_id.txt, output an empty value
             echo "::set-output name=concept_id::"
           fi
 
+      # Step 3: Create a new Zenodo concept if no existing concept ID is found
       - name: Create a new concept and store its ID
-        if: steps.concept_check.outputs.concept_id == ''
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ZENODO_SANDBOX_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
+        if: ${{ steps.concept_check.outputs.concept_id == '' }}  # Only run if no concept ID was found
         run: |
-          concept_id=$(curl -X POST https://sandbox.zenodo.org/api/deposit/depositions \
+          # Use curl to create a new concept on Zenodo's sandbox environment
+          response=$(curl -X POST https://sandbox.zenodo.org/api/deposit/depositions \
             -H "Authorization: Bearer $ZENODO_SANDBOX_ACCESS_TOKEN" \
             -H "Content-Type: application/json" \
             -d '{
               "metadata": {
-                "title": "Your project title",
-                "upload_type": "software",
-                "description": "Description of your project"
+                "title": "Your project title",  # Replace with the actual project title
+                "upload_type": "software",  # Type of upload (software, dataset, etc.)
+                "description": "Description of your project"  # Project description
               }
-            }' | jq -r .conceptdoi)
-          
-          echo "Created new concept with ID: $concept_id"
-          echo $concept_id > concept_id.txt
-          
-      - name: Create a draft snapshot of repository contents as a new version
+            }')
+
+          # Log the response to help debug if something goes wrong
+          echo "API Response: $response"
+          # Extract the concept ID (DOI) from the API response using jq
+          concept_id=$(echo "$response" | jq -r .conceptdoi)
+
+          # If concept ID is null, log an error and stop the workflow
+          if [[ "$concept_id" == "null" ]]; then
+            echo "Error: Concept DOI not returned. Check the API response."
+            exit 1  # Exit the workflow with an error code
+          else
+            # Log and save the concept ID for future reference
+            echo "Created new concept with ID: $concept_id"
+            echo $concept_id > concept_id.txt  # Store the concept ID in a file
+            # Set the concept ID as both an environment variable and an output for later steps
+            echo "CONCEPT_ID=$concept_id" >> $GITHUB_ENV
+            echo "::set-output name=concept_id::$concept_id"
+          fi
+
+      # Step 4: Create a draft snapshot of the repository contents
+      - name: Create a draft snapshot of your repository contents as a new version
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ZENODO_SANDBOX_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
-        uses: zenodraft/action@0.13.3
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # GitHub token for authorization
+          ZENODO_SANDBOX_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}  # Zenodo sandbox token for API access
+        uses: zenodraft/action@0.13.3  # Use the Zenodo draft action to create a new draft version
         with:
-          concept: ${{ steps.concept_check.outputs.concept_id }}
-          metadata: .zenodo.json
-          publish: false
-          sandbox: true
-          filenames: code  # Only upload the 'code' folder
+          concept: ${{ steps.concept_check.outputs.concept_id }}  # Use the existing concept ID
+          metadata: .zenodo.json  # Path to the metadata file for the deposit
+          publish: false  # Do not publish immediately, just create a draft
+          sandbox: true  # Use the Zenodo sandbox environment for testing
+          filenames: code  # Only upload the 'code' folder in the repository
