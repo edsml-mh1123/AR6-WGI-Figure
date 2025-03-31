@@ -1,91 +1,109 @@
 name: Publish to Zenodo
+description: "Publish a set of files to Zenodo, including creating a zip archive of the code folder and using zenodraft to publish."
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
-      - main  # Trigger on pull requests targeting the 'main' branch
-  workflow_dispatch:  # Allows manual trigger from GitHub Actions UI
+      - main
+  workflow_dispatch:
+    inputs:
+      concept:
+        description: "Zenodo concept ID"
+        required: true
+        default: ""
+      metadata:
+        description: "Path to the metadata YAML file"
+        required: true
+        default: "metadata.yml"
+      files:
+        description: "Files to be published"
+        required: true
+        default: "**/*"
+      publish:
+        description: "Whether to publish the draft"
+        required: false
+        default: "false"
+      sandbox:
+        description: "Use Zenodo sandbox environment"
+        required: true
+        default: "true"
+      verbose:
+        description: "Enable verbose logging"
+        required: false
+        default: "false"
 
 jobs:
   publish:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
 
-      - name: Check for Existing Zenodo Concept ID
-        id: concept_check
-        run: |
-          if [[ -f "concept_id.txt" ]]; then
-            CONCEPT_ID=$(cat concept_id.txt)
-            echo "Found existing Concept ID: $CONCEPT_ID"
-            echo "concept_id=$CONCEPT_ID" >> $GITHUB_OUTPUT
-          else
-            echo "No existing Concept ID found."
-            echo "concept_id=" >> $GITHUB_OUTPUT
-          fi
+    # Step 1: Create a zip archive of the 'code' folder (or any other folder you want to publish)
+    - name: Create zip archive of the code folder
+      run: |
+        zip -r code_folder.zip code/
 
-      - name: Retrieve or Create Zenodo Concept
-        id: zenodo_concept
-        env:
-          ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
-        run: |
-          EXISTING_CONCEPT_ID=$(echo "$RESPONSE" | jq -r '[.[] | select(.metadata.prereserve_doi != null) | .conceptrecid] | first')
-      
-          if [[ -n "$EXISTING_CONCEPT_ID" && "$EXISTING_CONCEPT_ID" != "null" ]]; then
-            echo "Using existing Concept ID: $EXISTING_CONCEPT_ID"
-            echo "concept_id=$EXISTING_CONCEPT_ID" >> $GITHUB_ENV
-            echo "concept_id=$EXISTING_CONCEPT_ID" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-      
-          echo "No existing concept found. Creating a new one..."
-          CREATE_RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions" \
-            -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d @.zenodo.json)
-      
-          if [[ $? -ne 0 || -z "$CREATE_RESPONSE" ]]; then
-            echo "Error: Failed to create a new Zenodo concept."
-            exit 1
-          fi
-      
-          echo "Zenodo Create Response: $CREATE_RESPONSE"
-      
-          NEW_CONCEPT_ID=$(echo "$CREATE_RESPONSE" | jq -r '.conceptrecid')
-      
-          if [[ -z "$NEW_CONCEPT_ID" || "$NEW_CONCEPT_ID" == "null" ]]; then
-            echo "Error: Concept DOI not returned. Full API Response:"
-            echo "$CREATE_RESPONSE"
-            exit 1
-          fi
-      
-          echo "New concept created: $NEW_CONCEPT_ID"
-          echo "concept_id=$NEW_CONCEPT_ID" >> $GITHUB_ENV
-          echo "concept_id=$NEW_CONCEPT_ID" >> $GITHUB_OUTPUT
-      
-      - name: Save Concept ID to GitHub Secret
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          if [[ -f "concept_id.txt" ]]; then
-            CONCEPT_ID=$(cat concept_id.txt)
-            echo "Storing Concept ID in GitHub Secrets..."
-            echo "$CONCEPT_ID" | gh secret set ZENODO_CONCEPT_ID --repo ${{ github.repository }}
-          else
-            echo "Error: concept_id.txt not found!"
-            exit 1
-          fi
+    # Step 2: Store the zip file as a GitHub artifact
+    - name: Upload zip file as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: code-folder-archive
+        path: code_folder.zip
 
-      - name: Create Draft Zenodo Snapshot
-        uses: zenodraft/action@0.13.3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ZENODO_SANDBOX_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
-        with:
-          concept: ${{ steps.concept_check.outputs.concept_id }}
-          metadata: .zenodo.json
-          publish: false
-          sandbox: true
-          filenames: code
+    # Step 3: Get list of files to be published
+    - name: Get file list
+      uses: tj-actions/glob@v22
+      id: globber
+      with:
+        files: ${{ inputs.files }}
+        match-directories: false
+
+    # Step 4: Print the list of files
+    - name: Print the list of files
+      run: echo "${{ steps.globber.outputs.paths }}"
+
+    # # Step 5: Add PR comment with the list of files
+    # - name: Add PR comment with file list
+    #   uses: mshick/add-pr-comment@v2
+    #   if: github.event_name == 'pull_request'
+    #   with:
+    #     repo-token: ${{ secrets.GITHUB_TOKEN }}
+    #     comment: |
+    #       ### Files to be published:
+    #       ${{ steps.globber.outputs.paths }}
+
+    # Step 6: Validate metadata against Zenodo schema
+    - name: Validate metadata against Zenodo schema
+      uses: GrantBirki/json-yaml-validate@v3.2.1
+      with:
+        files: ${{ inputs.metadata }}
+        yaml_as_json: "true"
+        json_schema: "${{ github.action_path }}/schema/zenodo/0.3.0/schema.json"
+        ajv_strict_mode: "false"
+
+    # Step 7: Convert metadata YAML to .zenodo.json
+    - name: Convert metadata YAML to .zenodo.json
+      run: |
+        cat ${{ inputs.metadata }} | yq e -o=json - > .zenodo.json
+
+    # Step 8: Print Zenodo metadata for debugging
+    - name: Print Zenodo metadata
+      run: cat .zenodo.json
+
+    # Step 9: Create a draft snapshot of your repository code content using zenodraft
+    - name: Create draft snapshot on Zenodo
+      uses: zenodraft/action@0.13.3
+      with:
+        concept: ${{ inputs.concept }}
+        filenames: "${{ steps.globber.outputs.paths }}"
+        metadata: .zenodo.json
+        publish: ${{ inputs.publish }}
+        sandbox: ${{ inputs.sandbox }}
+        verbose: ${{ inputs.verbose == 'true' }}
+
+    # Step 10: Clean up zip file after publication if no longer needed
+    - name: Clean up zip file
+      run: |
+        rm code_folder.zip
