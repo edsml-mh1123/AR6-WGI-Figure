@@ -31,8 +31,11 @@ jobs:
         env:
           ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
         run: |
-          if [[ -n "${{ steps.concept_check.outputs.concept_id }}" ]]; then
-            echo "Using existing Concept ID: ${{ steps.concept_check.outputs.concept_id }}"
+          EXISTING_CONCEPT_ID="${{ steps.concept_check.outputs.concept_id }}"
+          
+          if [[ -n "$EXISTING_CONCEPT_ID" ]]; then
+            echo "Using existing Concept ID: $EXISTING_CONCEPT_ID"
+            echo "concept_id=$EXISTING_CONCEPT_ID" >> $GITHUB_OUTPUT
             exit 0
           fi
 
@@ -44,6 +47,8 @@ jobs:
             echo "Error: Failed to retrieve depositions from Zenodo."
             exit 1
           fi
+
+          echo "Zenodo API Response: $RESPONSE"
 
           CONCEPT_ID=$(echo "$RESPONSE" | jq -r '[.[] | select(.metadata.prereserve_doi != null) | .conceptdoi] | first')
 
@@ -59,10 +64,13 @@ jobs:
               exit 1
             fi
 
+            echo "Zenodo Create Response: $CREATE_RESPONSE"
+
             CONCEPT_ID=$(echo "$CREATE_RESPONSE" | jq -r '.conceptdoi')
 
             if [[ -z "$CONCEPT_ID" || "$CONCEPT_ID" == "null" ]]; then
-              echo "Error: Concept DOI not returned. Check API response."
+              echo "Error: Concept DOI not returned. Full API Response:"
+              echo "$CREATE_RESPONSE"
               exit 1
             fi
 
@@ -75,6 +83,7 @@ jobs:
           echo "concept_id=$CONCEPT_ID" >> $GITHUB_ENV
           echo "concept_id=$CONCEPT_ID" >> $GITHUB_OUTPUT
 
+      
       - name: Save Concept ID to GitHub Secret
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
