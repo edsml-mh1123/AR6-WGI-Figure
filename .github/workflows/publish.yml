@@ -31,58 +31,39 @@ jobs:
         env:
           ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
         run: |
-          EXISTING_CONCEPT_ID="${{ steps.concept_check.outputs.concept_id }}"
-          
-          if [[ -n "$EXISTING_CONCEPT_ID" ]]; then
+          EXISTING_CONCEPT_ID=$(echo "$RESPONSE" | jq -r '[.[] | select(.metadata.prereserve_doi != null) | .conceptrecid] | first')
+      
+          if [[ -n "$EXISTING_CONCEPT_ID" && "$EXISTING_CONCEPT_ID" != "null" ]]; then
             echo "Using existing Concept ID: $EXISTING_CONCEPT_ID"
+            echo "concept_id=$EXISTING_CONCEPT_ID" >> $GITHUB_ENV
             echo "concept_id=$EXISTING_CONCEPT_ID" >> $GITHUB_OUTPUT
             exit 0
           fi
-
-          echo "Fetching existing depositions..."
-          RESPONSE=$(curl -s -X GET "https://sandbox.zenodo.org/api/deposit/depositions" \
-            -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
-
-          if [[ $? -ne 0 || -z "$RESPONSE" ]]; then
-            echo "Error: Failed to retrieve depositions from Zenodo."
+      
+          echo "No existing concept found. Creating a new one..."
+          CREATE_RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions" \
+            -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d @.zenodo.json)
+      
+          if [[ $? -ne 0 || -z "$CREATE_RESPONSE" ]]; then
+            echo "Error: Failed to create a new Zenodo concept."
             exit 1
           fi
-
-          echo "Zenodo API Response: $RESPONSE"
-
-          CONCEPT_ID=$(echo "$RESPONSE" | jq -r '[.[] | select(.metadata.prereserve_doi != null) | .conceptdoi] | first')
-
-          if [[ -z "$CONCEPT_ID" || "$CONCEPT_ID" == "null" ]]; then
-            echo "No existing concept found. Creating a new one..."
-            CREATE_RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions" \
-              -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
-              -H "Content-Type: application/json" \
-              -d @.zenodo.json)
-
-            if [[ $? -ne 0 || -z "$CREATE_RESPONSE" ]]; then
-              echo "Error: Failed to create a new Zenodo concept."
-              exit 1
-            fi
-
-            echo "Zenodo Create Response: $CREATE_RESPONSE"
-
-            CONCEPT_ID=$(echo "$CREATE_RESPONSE" | jq -r '.conceptdoi')
-
-            if [[ -z "$CONCEPT_ID" || "$CONCEPT_ID" == "null" ]]; then
-              echo "Error: Concept DOI not returned. Full API Response:"
-              echo "$CREATE_RESPONSE"
-              exit 1
-            fi
-
-            echo "New concept created: $CONCEPT_ID"
-          else
-            echo "Using existing Concept ID: $CONCEPT_ID"
+      
+          echo "Zenodo Create Response: $CREATE_RESPONSE"
+      
+          NEW_CONCEPT_ID=$(echo "$CREATE_RESPONSE" | jq -r '.conceptrecid')
+      
+          if [[ -z "$NEW_CONCEPT_ID" || "$NEW_CONCEPT_ID" == "null" ]]; then
+            echo "Error: Concept DOI not returned. Full API Response:"
+            echo "$CREATE_RESPONSE"
+            exit 1
           fi
-
-          echo "$CONCEPT_ID" > concept_id.txt
-          echo "concept_id=$CONCEPT_ID" >> $GITHUB_ENV
-          echo "concept_id=$CONCEPT_ID" >> $GITHUB_OUTPUT
-
+      
+          echo "New concept created: $NEW_CONCEPT_ID"
+          echo "concept_id=$NEW_CONCEPT_ID" >> $GITHUB_ENV
+          echo "concept_id=$NEW_CONCEPT_ID" >> $GITHUB_OUTPUT
       
       - name: Save Concept ID to GitHub Secret
         env:
