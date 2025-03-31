@@ -1,10 +1,8 @@
 name: Publish to Zenodo
 
 on:
-  pull_request:
-    branches:
-      - main
-  workflow_dispatch:
+  # Remove the pull_request trigger since it's not supported
+  workflow_dispatch:  # Manual trigger only
 
 jobs:
   publish-fig:
@@ -52,27 +50,32 @@ jobs:
               echo "Error creating new deposition."
               exit 1
             fi
+            echo "Creation response: $RESPONSE"
             DEPOSITION_ID=$(echo $RESPONSE | jq -r '.id')
             echo "Created new deposition with ID: $DEPOSITION_ID"
           else 
             DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.[] | select(.metadata.prereserve_doi != null) | .id' | head -n 1)
             echo "Using existing deposition with ID: $DEPOSITION_ID"
           fi
+          
+          if [ -z "$DEPOSITION_ID" ]; then
+            echo "Error: DEPOSITION_ID is not set"
+            exit 1
+          fi
+          
           echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
-  
+
       - name: Upload the ZIP file to Zenodo
-        uses: ipcc-ar7/publish-zenodo@v1.9
+        uses: zenodraft/action@0.13.3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ZENODO_SANDBOX_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
         with:
-          files: |
-            code.zip
           metadata: .zenodo.json
+          filenames: |
+            code.zip
           sandbox: true
           publish: false
-          # concept: ${{ steps.zenodo_deposition.outputs.concept_id }}
-          concept: ${{ steps.zenodo_deposition.outputs.deposition_id }}
           verbose: true
 
       - name: Publish the Zenodo deposition
@@ -80,10 +83,15 @@ jobs:
         env:
           ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
         run: |
+          if [ -z "$DEPOSITION_ID" ]; then
+            echo "Error: DEPOSITION_ID is not set"
+            exit 1
+          fi
+          
           RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/actions/publish" \
             -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
           if [[ $? -ne 0 ]]; then
-            echo "Error publishing the deposition."
+            echo "Error publishing the deposition. Response: $RESPONSE"
             exit 1
           fi
           echo "Deposition published successfully."
