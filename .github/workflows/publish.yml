@@ -1,7 +1,9 @@
 name: Publish to Zenodo
 
 on:
-  # Remove the pull_request trigger since it's not supported
+  push:
+    branches:
+      - main
   workflow_dispatch:  # Manual trigger only
 
 jobs:
