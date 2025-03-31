@@ -8,88 +8,94 @@ on:
 
 jobs:
   publish:
-    runs-on: ubuntu-latest  # The job will run on the latest Ubuntu environment
+    runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the contents of the repository
-      - name: Checkout the contents of your repository
-        uses: actions/checkout@v4  # This step checks out the repository so the workflow can access it
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      # Step 2: Check if a concept ID already exists in the repository
-      - name: Check if concept exists
+      - name: Check for Existing Zenodo Concept ID
         id: concept_check
         run: |
-          # Check if 'concept_id.txt' exists. If it does, output the concept ID.
           if [[ -f "concept_id.txt" ]]; then
-            echo "Concept ID found: $(cat concept_id.txt)"
-            echo "::set-output name=concept_id::$(cat concept_id.txt)"
+            CONCEPT_ID=$(cat concept_id.txt)
+            echo "Found existing Concept ID: $CONCEPT_ID"
+            echo "concept_id=$CONCEPT_ID" >> $GITHUB_OUTPUT
           else
-            # If no concept_id.txt, output an empty value
-            echo "::set-output name=concept_id::"
+            echo "No existing Concept ID found."
+            echo "concept_id=" >> $GITHUB_OUTPUT
           fi
 
-      # Step 3: Create a new Zenodo concept if no existing concept ID is found
-      - name: Create a new concept and store its ID
+      - name: Retrieve or Create Zenodo Concept
         id: zenodo_concept
         env:
           ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
         run: |
-          # Fetch existing depositions
+          if [[ -n "${{ steps.concept_check.outputs.concept_id }}" ]]; then
+            echo "Using existing Concept ID: ${{ steps.concept_check.outputs.concept_id }}"
+            exit 0
+          fi
+
+          echo "Fetching existing depositions..."
           RESPONSE=$(curl -s -X GET "https://sandbox.zenodo.org/api/deposit/depositions" \
             -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
-          
-          if [[ $? -ne 0 ]]; then
-            echo "Error fetching depositions from Zenodo."
+
+          if [[ $? -ne 0 || -z "$RESPONSE" ]]; then
+            echo "Error: Failed to retrieve depositions from Zenodo."
             exit 1
           fi
-          
-          echo "Zenodo API Response: $RESPONSE"
-          
-          # Extract an existing concept ID if available
-          CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.[] | select(.metadata.prereserve_doi != null) | .conceptdoi' | head -n 1)
-          
+
+          CONCEPT_ID=$(echo "$RESPONSE" | jq -r '[.[] | select(.metadata.prereserve_doi != null) | .conceptdoi] | first')
+
           if [[ -z "$CONCEPT_ID" || "$CONCEPT_ID" == "null" ]]; then
-            echo "No existing concept found. Creating a new one."
-            
-            # Create a new concept using .zenodo.json
+            echo "No existing concept found. Creating a new one..."
             CREATE_RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions" \
               -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
               -H "Content-Type: application/json" \
               -d @.zenodo.json)
-            
-            if [[ $? -ne 0 ]]; then
-              echo "Error creating new concept."
-              exit 1
-            fi
-            
-            echo "Create Response: $CREATE_RESPONSE"
-            CONCEPT_ID=$(echo "$CREATE_RESPONSE" | jq -r '.conceptdoi')
-            
-            if [[ -z "$CONCEPT_ID" || "$CONCEPT_ID" == "null" ]]; then
-              echo "Error: Concept DOI not returned. Check the API response."
-              exit 1
-            fi
-            
-            echo "Created new concept with ID: $CONCEPT_ID"
-          else
-            echo "Using existing concept with ID: $CONCEPT_ID"
-          fi
-          
-          # Store the concept ID in environment variables, outputs, and a file
-          echo "CONCEPT_ID=$CONCEPT_ID" >> $GITHUB_ENV
-          echo "concept_id=$CONCEPT_ID" >> $GITHUB_OUTPUT
-          echo "$CONCEPT_ID" > concept_id.txt
-      
 
-      # Step 4: Create a draft snapshot of the repository contents
-      - name: Create a draft snapshot of your repository contents as a new version
+            if [[ $? -ne 0 || -z "$CREATE_RESPONSE" ]]; then
+              echo "Error: Failed to create a new Zenodo concept."
+              exit 1
+            fi
+
+            CONCEPT_ID=$(echo "$CREATE_RESPONSE" | jq -r '.conceptdoi')
+
+            if [[ -z "$CONCEPT_ID" || "$CONCEPT_ID" == "null" ]]; then
+              echo "Error: Concept DOI not returned. Check API response."
+              exit 1
+            fi
+
+            echo "New concept created: $CONCEPT_ID"
+          else
+            echo "Using existing Concept ID: $CONCEPT_ID"
+          fi
+
+          echo "$CONCEPT_ID" > concept_id.txt
+          echo "concept_id=$CONCEPT_ID" >> $GITHUB_ENV
+          echo "concept_id=$CONCEPT_ID" >> $GITHUB_OUTPUT
+
+      - name: Save Concept ID to GitHub Secret
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # GitHub token for authorization
-          ZENODO_SANDBOX_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}  # Zenodo sandbox token for API access
-        uses: zenodraft/action@0.13.3  # Use the Zenodo draft action to create a new draft version
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [[ -f "concept_id.txt" ]]; then
+            CONCEPT_ID=$(cat concept_id.txt)
+            echo "Storing Concept ID in GitHub Secrets..."
+            echo "$CONCEPT_ID" | gh secret set ZENODO_CONCEPT_ID --repo ${{ github.repository }}
+          else
+            echo "Error: concept_id.txt not found!"
+            exit 1
+          fi
+
+      - name: Create Draft Zenodo Snapshot
+        uses: zenodraft/action@0.13.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ZENODO_SANDBOX_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
         with:
-          concept: ${{ steps.concept_check.outputs.concept_id }}  # Use the existing concept ID
-          metadata: .zenodo.json  # Path to the metadata file for the deposit
-          publish: false  # Do not publish immediately, just create a draft
-          sandbox: true  # Use the Zenodo sandbox environment for testing
-          filenames: code  # Only upload the 'code' folder in the repository
+          concept: ${{ steps.concept_check.outputs.concept_id }}
+          metadata: .zenodo.json
+          publish: false
+          sandbox: true
+          filenames: code
