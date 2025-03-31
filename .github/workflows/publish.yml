@@ -23,7 +23,7 @@ jobs:
             echo "Contents of .zenodo.json:"
             cat .zenodo.json
           fi
-
+        
       - name: Get or create Zenodo deposition
         id: zenodo_deposition
         env:
@@ -57,11 +57,10 @@ jobs:
           fi
           
           # Extract concept ID and deposition ID from the response
-          CONCEPT_DOI=$(echo "$RESPONSE" | jq -r '.[] | select(.metadata.prereserve_doi != null) | .conceptdoi' | head -n 1)
           CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.[] | select(.metadata.prereserve_doi != null) | .conceptrecid' | head -n 1)
           DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.[] | select(.metadata.prereserve_doi != null) | .id' | head -n 1)
           
-          echo "Retrieved from API: Concept DOI=$CONCEPT_DOI, Concept ID=$CONCEPT_ID, Deposition ID=$DEPOSITION_ID"
+          echo "Retrieved from API: Concept ID=$CONCEPT_ID, Deposition ID=$DEPOSITION_ID"
           
           # If no existing deposition found, create a new one
           if [ -z "$CONCEPT_ID" ] || [ -z "$DEPOSITION_ID" ]; then
@@ -88,40 +87,21 @@ jobs:
             # Extract IDs from the creation response
             DEPOSITION_ID=$(echo "$CREATE_RESPONSE" | jq -r '.id')
             CONCEPT_ID=$(echo "$CREATE_RESPONSE" | jq -r '.conceptrecid')
-            CONCEPT_DOI=$(echo "$CREATE_RESPONSE" | jq -r '.conceptdoi')
             
             echo "Created new deposition with ID: $DEPOSITION_ID"
             echo "Concept ID: $CONCEPT_ID"
-            echo "Concept DOI: $CONCEPT_DOI"
-            
-            # Register concept DOI if not already present
-            if [ -z "$CONCEPT_DOI" ]; then
-              echo "Registering concept DOI..."
-              REGISTER_RESPONSE=$(curl -s -X POST \
-                "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/actions/registerconceptdoi" \
-                -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
-              
-              if [[ $? -ne 0 ]]; then
-                echo "Warning: Failed to register concept DOI."
-                echo "Response: $REGISTER_RESPONSE"
-              else
-                CONCEPT_DOI=$(echo "$REGISTER_RESPONSE" | jq -r '.conceptdoi')
-                echo "Registered concept DOI: $CONCEPT_DOI"
-              fi
-            fi
           else
             echo "Using existing deposition with ID: $DEPOSITION_ID"
           fi
           
           # Store IDs for future use
-          echo "{\"concept_id\":\"$CONCEPT_ID\",\"deposition_id\":\"$DEPOSITION_ID\",\"concept_doi\":\"$CONCEPT_DOI\"}" > "$ID_STORAGE_FILE"
+          echo "{\"concept_id\":\"$CONCEPT_ID\",\"deposition_id\":\"$DEPOSITION_ID\"}" > "$ID_STORAGE_FILE"
           echo "Saved IDs to $ID_STORAGE_FILE for future use"
           
           # Make IDs available to other steps
           echo "CONCEPT_ID=$CONCEPT_ID" >> $GITHUB_ENV
           echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
-          echo "CONCEPT_DOI=$CONCEPT_DOI" >> $GITHUB_ENV
-      
+    
       - name: Upload the ZIP file to Zenodo
         uses: zenodraft/action@0.13.3
         env:
