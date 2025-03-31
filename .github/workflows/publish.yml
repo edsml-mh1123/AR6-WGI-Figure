@@ -49,19 +49,12 @@ jobs:
               echo "Error creating new deposition."
               exit 1
             fi
-            echo "Creation response: $RESPONSE"
             DEPOSITION_ID=$(echo $RESPONSE | jq -r '.id')
             echo "Created new deposition with ID: $DEPOSITION_ID"
           else 
             DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.[] | select(.metadata.prereserve_doi != null) | .id' | head -n 1)
             echo "Using existing deposition with ID: $DEPOSITION_ID"
           fi
-          
-          if [ -z "$DEPOSITION_ID" ]; then
-            echo "Error: DEPOSITION_ID is not set"
-            exit 1
-          fi
-          
           echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
 
       - name: Upload the ZIP file to Zenodo
