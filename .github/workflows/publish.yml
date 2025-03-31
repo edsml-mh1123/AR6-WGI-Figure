@@ -81,6 +81,26 @@ jobs:
           echo "Response: $RESPONSE"
       
 
+      - name: Upload the ZIP file to Zenodo
+        env:
+          ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
+          DEPOSITION_ID: ${{ env.DEPOSITION_ID }}
+        run: |
+          echo "Uploading code.zip to Zenodo deposition $DEPOSITION_ID..."
+          
+          RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/files" \
+            -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data-binary @<(jq -n --arg filename "code.zip" '{filename: $filename}'))
+          
+          echo "Upload response: $RESPONSE"
+          
+          if echo "$RESPONSE" | jq -e '.id' >/dev/null; then
+            echo "File uploaded successfully!"
+          else
+            echo "ERROR: Failed to upload file."
+            exit 1
+          fi
       
       # - name: Upload the ZIP file to Zenodo
       #   env:
