@@ -76,23 +76,16 @@ jobs:
           echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
           echo "concept_id=$CONCEPT_ID" >> $GITHUB_OUTPUT
 
-      - name: Debug Zenodo Concept ID
+      - name: Debug Zenodo Deposition
         env:
           ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
-          CONCEPT_ID: ${{ steps.zenodo_deposition.outputs.concept_id }}
+          DEPOSITION_ID: ${{ env.DEPOSITION_ID }}
         run: |
-          echo "Checking Concept ID: $CONCEPT_ID"
-          RESPONSE=$(curl -s -X GET "https://sandbox.zenodo.org/api/deposit/depositions/$CONCEPT_ID" \
+          echo "Verifying if deposition exists: ID = $DEPOSITION_ID"
+          RESPONSE=$(curl -s -X GET "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID" \
             -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
-          
           echo "Response: $RESPONSE"
       
-          if echo "$RESPONSE" | jq -e '.id' >/dev/null; then
-            echo "Concept ID is valid!"
-          else
-            echo "ERROR: Invalid Concept ID or it does not exist."
-            exit 1
-          fi
 
       # - name: Upload the ZIP file to Zenodo
       #   env:
@@ -115,16 +108,17 @@ jobs:
       #       exit 1
       #     fi
         
-      - name: Upload the ZIP file to Zenodo
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ZENODO_SANDBOX_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
-        uses: zenodraft/action@0.13.3
-        with:
-          concept: ${{ steps.zenodo_deposition.outputs.concept_id }}
-          metadata: .zenodo.json
-          publish: false
-          sandbox: true
-          filenames: |
-            code.zip
-          verbose: true
+      # - name: Upload the ZIP file to Zenodo
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     ZENODO_SANDBOX_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
+      #   uses: zenodraft/action@0.13.3
+      #   with:
+      #     # concept: ${{ steps.zenodo_deposition.outputs.concept_id }}
+      #     concept: 
+      #     metadata: .zenodo.json
+      #     publish: false
+      #     sandbox: true
+      #     filenames: |
+      #       code.zip
+      #     verbose: true
