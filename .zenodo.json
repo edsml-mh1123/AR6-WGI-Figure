@@ -1,31 +1,29 @@
 {
-  "metadata": {
-    "upload_type": "dataset",
-    "title": "SURFACE AIR TEMPERATURE - MODEL BIAS",
-    "description": "This repository contains scripts for data analysis and visualization.",
-    "creators": [
-      {
-        "name": "Hong, Mai",
-        "affiliation": "IPCC AR7 WGI TSU",
-        "orcid": "0000-0001-2345-6789"
-      }
-    ],
-    "keywords": ["sea surface temperature", "visualization", "Python"],
-    "license": "Apache-2.0",
-    "version": "1.0.0",
-    "access_right": "open",
-    "publication_date": "2025-03-13",
-    "related_identifiers": [
-      {
-        "relation": "isSupplementTo",
-        "identifier": "https://github.com/edsml-mh1123/AR6-WGI-Figure",
-        "resource_type": "software"
-      }
-    ],
-    "communities": [
-      {
-        "identifier": "opensource"
-      }
-    ]
-  }
+  "upload_type": "dataset",
+  "title": "SURFACE AIR TEMPERATURE - MODEL BIAS",
+  "description": "This repository contains scripts for data analysis and visualization.",
+  "creators": [
+    {
+      "name": "Hong, Mai",
+      "affiliation": "IPCC AR7 WGI TSU",
+      "orcid": "0000-0001-2345-6789"
+    }
+  ],
+  "keywords": ["sea surface temperature", "visualization", "Python"],
+  "license": "Apache-2.0",
+  "version": "1.0.0",
+  "access_right": "open",
+  "publication_date": "2025-03-13",
+  "related_identifiers": [
+    {
+      "relation": "isSupplementTo",
+      "identifier": "https://github.com/edsml-mh1123/AR6-WGI-Figure",
+      "resource_type": "software"
+    }
+  ],
+  "communities": [
+    {
+      "identifier": "opensource"
+    }
+  ]
 }
