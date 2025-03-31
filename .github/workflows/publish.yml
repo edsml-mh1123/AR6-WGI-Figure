@@ -71,9 +71,8 @@ jobs:
           metadata: .zenodo.json
           sandbox: true
           publish: false
-          # concept: $DEPOSITION_ID
-          concept: ${{ steps.zenodo_deposition.outputs.concept_id }}
-          # concept: ${{ steps.zenodo_deposition.outputs.deposition_id }}
+          # concept: ${{ steps.zenodo_deposition.outputs.concept_id }}
+          concept: ${{ steps.zenodo_deposition.outputs.deposition_id }}
           verbose: true
 
       - name: Publish the Zenodo deposition
