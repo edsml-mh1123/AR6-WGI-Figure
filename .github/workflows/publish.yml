@@ -1,109 +1,92 @@
 name: Publish to Zenodo
-description: "Publish a set of files to Zenodo, including creating a zip archive of the code folder and using zenodraft to publish."
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main
   workflow_dispatch:
-    inputs:
-      concept:
-        description: "Zenodo concept ID"
-        required: true
-        default: ""
-      metadata:
-        description: "Path to the metadata YAML file"
-        required: true
-        default: "metadata.yml"
-      files:
-        description: "Files to be published"
-        required: true
-        default: "**/*"
-      publish:
-        description: "Whether to publish the draft"
-        required: false
-        default: "false"
-      sandbox:
-        description: "Use Zenodo sandbox environment"
-        required: true
-        default: "true"
-      verbose:
-        description: "Enable verbose logging"
-        required: false
-        default: "false"
 
 jobs:
-  publish:
+  publish-fig:
     runs-on: ubuntu-latest
+    name: Publish code to Zenodo
     steps:
+      - name: Checkout the contents of your repository
+        uses: actions/checkout@v4
 
-    # Step 1: Create a zip archive of the 'code' folder (or any other folder you want to publish)
-    - name: Create zip archive of the code folder
-      run: |
-        zip -r code_folder.zip code/
+      - name: Create ZIP of code folder
+        run: zip -r code.zip code/
 
-    # Step 2: Store the zip file as a GitHub artifact
-    - name: Upload zip file as artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: code-folder-archive
-        path: code_folder.zip
+      - name: Store ZIP as an artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: code-archive
+          path: code.zip
 
-    # Step 3: Get list of files to be published
-    - name: Get file list
-      uses: tj-actions/glob@v22
-      id: globber
-      with:
-        files: ${{ inputs.files }}
-        match-directories: false
+      - name: Debug `.zenodo.json` existence
+        run: |
+          if [ ! -f ".zenodo.json" ]; then
+            echo "Error: .zenodo.json does not exist!"
+            exit 1
+          else
+            echo "Contents of .zenodo.json:"
+            cat .zenodo.json
+          fi
 
-    # Step 4: Print the list of files
-    - name: Print the list of files
-      run: echo "${{ steps.globber.outputs.paths }}"
+      - name: Get or create Zenodo deposition
+        id: zenodo_deposition
+        env:
+          ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
+        run: |
+          RESPONSE=$(curl -s -X GET "https://sandbox.zenodo.org/api/deposit/depositions" \
+            -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
+          if [[ $? -ne 0 ]]; then
+            echo "Error fetching deposition list from Zenodo."
+            exit 1
+          fi
+          echo "Zenodo API Response: $RESPONSE"
+          
+          CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.[] | select(.metadata.prereserve_doi != null) | .conceptdoi' | head -n 1)
+          echo "Concept ID: $CONCEPT_ID"
+          
+          if [ -z "$CONCEPT_ID" ]; then
+            RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions" \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
+              -d @.zenodo.json)
+            if [[ $? -ne 0 ]]; then
+              echo "Error creating new deposition."
+              exit 1
+            fi
+            DEPOSITION_ID=$(echo $RESPONSE | jq -r '.id')
+            echo "Created new deposition with ID: $DEPOSITION_ID"
+          else 
+            DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.[] | select(.metadata.prereserve_doi != null) | .id' | head -n 1)
+            echo "Using existing deposition with ID: $DEPOSITION_ID"
+          fi
+          echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
 
-    # # Step 5: Add PR comment with the list of files
-    # - name: Add PR comment with file list
-    #   uses: mshick/add-pr-comment@v2
-    #   if: github.event_name == 'pull_request'
-    #   with:
-    #     repo-token: ${{ secrets.GITHUB_TOKEN }}
-    #     comment: |
-    #       ### Files to be published:
-    #       ${{ steps.globber.outputs.paths }}
+      - name: Upload the ZIP file to Zenodo
+        uses: ipcc-ar7/publish-zenodo@v1.9
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ZENODO_SANDBOX_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
+          DEPOSITION_ID: ${{ env.DEPOSITION_ID }}
+        with:
+          metadata: .zenodo.json
+          concept: ${{ env.DEPOSITION_ID }}
+          files: |
+            code.zip
 
-    # Step 6: Validate metadata against Zenodo schema
-    - name: Validate metadata against Zenodo schema
-      uses: GrantBirki/json-yaml-validate@v3.2.1
-      with:
-        files: ${{ inputs.metadata }}
-        yaml_as_json: "true"
-        json_schema: "${{ github.action_path }}/schema/zenodo/0.3.0/schema.json"
-        ajv_strict_mode: "false"
-
-    # Step 7: Convert metadata YAML to .zenodo.json
-    - name: Convert metadata YAML to .zenodo.json
-      run: |
-        cat ${{ inputs.metadata }} | yq e -o=json - > .zenodo.json
-
-    # Step 8: Print Zenodo metadata for debugging
-    - name: Print Zenodo metadata
-      run: cat .zenodo.json
-
-    # Step 9: Create a draft snapshot of your repository code content using zenodraft
-    - name: Create draft snapshot on Zenodo
-      uses: zenodraft/action@0.13.3
-      with:
-        concept: ${{ inputs.concept }}
-        filenames: "${{ steps.globber.outputs.paths }}"
-        metadata: .zenodo.json
-        publish: ${{ inputs.publish }}
-        sandbox: ${{ inputs.sandbox }}
-        verbose: ${{ inputs.verbose == 'true' }}
-
-    # Step 10: Clean up zip file after publication if no longer needed
-    - name: Clean up zip file
-      run: |
-        rm code_folder.zip
+      - name: Publish the Zenodo deposition
+        if: success()
+        env:
+          ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
+        run: |
+          RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/actions/publish" \
+            -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
+          if [[ $? -ne 0 ]]; then
+            echo "Error publishing the deposition."
+            exit 1
+          fi
+          echo "Deposition published successfully."
