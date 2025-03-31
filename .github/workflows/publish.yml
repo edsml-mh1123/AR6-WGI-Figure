@@ -102,33 +102,53 @@ jobs:
           echo "CONCEPT_ID=$CONCEPT_ID" >> $GITHUB_ENV
           echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
     
-      - name: Upload the ZIP file to Zenodo
-        uses: zenodraft/action@0.13.3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ZENODO_SANDBOX_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
-        with:
-          metadata: .zenodo.json
-          filenames: |
-            code.zip
-          sandbox: true
-          publish: false
-          verbose: true
-
-      - name: Publish the Zenodo deposition
-        if: success()
+      # - name: Upload the ZIP file to Zenodo
+      #   uses: zenodraft/action@0.13.3
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     ZENODO_SANDBOX_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
+      #   with:
+      #     metadata: .zenodo.json
+      #     filenames: |
+      #       code.zip
+      #     sandbox: true
+      #     publish: false
+      #     verbose: true
+    
+      - name: Publish the ZIP file to Zenodo
         env:
           ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
         run: |
-          if [ -z "$DEPOSITION_ID" ]; then
-            echo "Error: DEPOSITION_ID is not set"
+          # Use the deposition ID from the previous step
+          echo "Using deposition ID: $DEPOSITION_ID"
+          
+          # Check if the file exists
+          if [ ! -f "code.zip" ]; then
+            echo "Error: code.zip file not found."
             exit 1
           fi
           
-          RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/actions/publish" \
-            -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
+          # Upload the file to the existing deposition
+          echo "Uploading code.zip to Zenodo deposition $DEPOSITION_ID..."
+          UPLOAD_RESPONSE=$(curl -s -X POST \
+            "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/files" \
+            -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
+            -F "file=@code.zip" \
+            -F "name=code.zip")
+          
           if [[ $? -ne 0 ]]; then
-            echo "Error publishing the deposition. Response: $RESPONSE"
+            echo "Error uploading file to Zenodo."
+            echo "Response: $UPLOAD_RESPONSE"
             exit 1
           fi
-          echo "Deposition published successfully."
+          
+          FILE_ID=$(echo "$UPLOAD_RESPONSE" | jq -r '.id')
+          
+          if [ -z "$FILE_ID" ] || [ "$FILE_ID" == "null" ]; then
+            echo "Failed to upload file. Response: $UPLOAD_RESPONSE"
+            exit 1
+          fi
+          
+          echo "Successfully uploaded code.zip to deposition $DEPOSITION_ID"
+          echo "File ID: $FILE_ID"
+          
