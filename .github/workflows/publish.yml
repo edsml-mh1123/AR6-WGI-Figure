@@ -61,15 +61,13 @@ jobs:
           echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
 
       - name: Upload the ZIP file to Zenodo
-        uses: ipcc-ar7/publish-zenodo@v1.9
+        uses: zenodraft/action@0.13.3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ZENODO_SANDBOX_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
-          DEPOSITION_ID: ${{ env.DEPOSITION_ID }}
         with:
           metadata: .zenodo.json
-          concept: ${{ env.DEPOSITION_ID }}
-          files: |
+          filenames: |
             code.zip
           sandbox: true
           publish: false
