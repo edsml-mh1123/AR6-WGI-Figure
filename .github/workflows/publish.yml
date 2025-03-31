@@ -35,77 +35,44 @@ jobs:
           # Define storage file for IDs
           ID_STORAGE_FILE=".zenodo_ids.json"
           
-          # Check if we have stored IDs from previous runs
-          if [ -f "$ID_STORAGE_FILE" ]; then
-            echo "Found existing Zenodo IDs file"
-            STORED_CONCEPT_ID=$(jq -r '.concept_id // empty' "$ID_STORAGE_FILE")
-            STORED_DEPOSITION_ID=$(jq -r '.deposition_id // empty' "$ID_STORAGE_FILE")
-            
-            if [ -n "$STORED_CONCEPT_ID" ] && [ -n "$STORED_DEPOSITION_ID" ]; then
-              echo "Using stored IDs: Concept ID=$STORED_CONCEPT_ID, Deposition ID=$STORED_DEPOSITION_ID"
-              echo "CONCEPT_ID=$STORED_CONCEPT_ID" >> $GITHUB_ENV
-              echo "DEPOSITION_ID=$STORED_DEPOSITION_ID" >> $GITHUB_ENV
-              echo "concept_id=$STORED_CONCEPT_ID" >> $GITHUB_OUTPUT
-              exit 0
-            fi
-          fi
-          
-          # If we don't have stored IDs, query Zenodo API
-          echo "Fetching depositions from Zenodo..."
-          RESPONSE=$(curl -s -X GET "https://sandbox.zenodo.org/api/deposit/depositions" \
+          # Verify token works
+          echo "Testing Zenodo API access..."
+          TEST_RESPONSE=$(curl -s -X GET "https://sandbox.zenodo.org/api/deposit/depositions" \
             -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
           
-          if [[ $? -ne 0 ]]; then
-            echo "Error fetching deposition list from Zenodo."
+          if echo "$TEST_RESPONSE" | grep -q "message"; then
+            echo "ERROR: API access issue - $(echo $TEST_RESPONSE | jq -r '.message // "Unknown error"')"
             exit 1
           fi
           
-          # Extract concept ID and deposition ID from the response
-          CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.[] | select(.metadata.prereserve_doi != null) | .conceptrecid' | head -n 1)
-          DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.[] | select(.metadata.prereserve_doi != null) | .id' | head -n 1)
+          # Create new deposition with inline metadata
+          echo "Creating new deposition..."
+          CREATE_RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
+            -d '{"metadata": {"title": "My Dataset", "upload_type": "dataset", "description": "Description", "creators": [{"name": "Author Name", "affiliation": "Affiliation"}]}}')
           
-          echo "Retrieved from API: Concept ID=$CONCEPT_ID, Deposition ID=$DEPOSITION_ID"
+          # Extract IDs from the creation response
+          DEPOSITION_ID=$(echo "$CREATE_RESPONSE" | jq -r '.id')
+          CONCEPT_ID=$(echo "$CREATE_RESPONSE" | jq -r '.conceptrecid')
           
-          # If no existing deposition found, create a new one
-          if [ -z "$CONCEPT_ID" ] || [ -z "$DEPOSITION_ID" ]; then
-            echo "No existing deposition found. Creating new deposition..."
-            
-            # Ensure .zenodo.json exists
-            if [ ! -f ".zenodo.json" ]; then
-              echo "Error: .zenodo.json file not found."
-              exit 1
-            fi
-            
-            # Create new deposition
-            CREATE_RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions" \
-              -H "Content-Type: application/json" \
-              -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
-              -d @.zenodo.json)
-            
-            if [[ $? -ne 0 ]]; then
-              echo "Error creating new deposition."
-              echo "Response: $CREATE_RESPONSE"
-              exit 1
-            fi
-            
-            # Extract IDs from the creation response
-            DEPOSITION_ID=$(echo "$CREATE_RESPONSE" | jq -r '.id')
-            CONCEPT_ID=$(echo "$CREATE_RESPONSE" | jq -r '.conceptrecid')
-            
-            echo "Created new deposition with ID: $DEPOSITION_ID"
-            echo "Concept ID: $CONCEPT_ID"
-          else
-            echo "Using existing deposition with ID: $DEPOSITION_ID"
+          if [ "$DEPOSITION_ID" = "null" ] || [ -z "$DEPOSITION_ID" ]; then
+            echo "ERROR: Failed to create deposition"
+            echo "Response: $CREATE_RESPONSE"
+            exit 1
           fi
+          
+          echo "Created new deposition with ID: $DEPOSITION_ID"
+          echo "Concept ID: $CONCEPT_ID"
           
           # Store IDs for future use
           echo "{\"concept_id\":\"$CONCEPT_ID\",\"deposition_id\":\"$DEPOSITION_ID\"}" > "$ID_STORAGE_FILE"
-          echo "Saved IDs to $ID_STORAGE_FILE for future use"
           
           # Make IDs available to other steps
           echo "CONCEPT_ID=$CONCEPT_ID" >> $GITHUB_ENV
           echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
           echo "concept_id=$CONCEPT_ID" >> $GITHUB_OUTPUT
+      
 
       - name: Upload the ZIP file to Zenodo
         env:
