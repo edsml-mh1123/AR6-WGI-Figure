@@ -137,18 +137,19 @@ jobs:
             "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/actions/newversion" \
             -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
           
-          if [[ $? -ne 0 ]]; then
-            echo "Error creating new version. Response: $NEW_VERSION_RESPONSE"
-            exit 1
-          fi
+          # Debug the response
+          echo "New version response: $NEW_VERSION_RESPONSE"
           
           # Extract the new deposition ID from the response
-          NEW_DEPOSITION_ID=$(echo "$NEW_VERSION_RESPONSE" | jq -r '.links.latest_draft | split("/").[-1]')
+          NEW_DEPOSITION_URL=$(echo "$NEW_VERSION_RESPONSE" | jq -r '.links.latest_draft // empty')
           
-          if [ -z "$NEW_DEPOSITION_ID" ] || [ "$NEW_DEPOSITION_ID" == "null" ]; then
-            echo "Failed to get new deposition ID. Response: $NEW_VERSION_RESPONSE"
+          if [ -z "$NEW_DEPOSITION_URL" ]; then
+            echo "Failed to get latest_draft URL. Response: $NEW_VERSION_RESPONSE"
             exit 1
           fi
+          
+          # Extract the ID from the URL using shell parameter expansion
+          NEW_DEPOSITION_ID=${NEW_DEPOSITION_URL##*/}
           
           echo "Created new version with deposition ID: $NEW_DEPOSITION_ID"
           
@@ -184,5 +185,17 @@ jobs:
           
           # Output the Zenodo URL for the new deposition
           echo "Zenodo deposition URL: https://sandbox.zenodo.org/deposit/$NEW_DEPOSITION_ID"
-      
-    
+          
+          # Optionally publish the deposition (uncomment to enable)
+          # echo "Publishing deposition..."
+          # PUBLISH_RESPONSE=$(curl -s -X POST \
+          #   "https://sandbox.zenodo.org/api/deposit/depositions/$NEW_DEPOSITION_ID/actions/publish" \
+          #   -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
+          # 
+          # if [[ $? -ne 0 ]]; then
+          #   echo "Error publishing deposition."
+          #   echo "Response: $PUBLISH_RESPONSE"
+          #   exit 1
+          # fi
+          # 
+          # echo "Successfully published deposition $NEW_DEPOSITION_ID"
