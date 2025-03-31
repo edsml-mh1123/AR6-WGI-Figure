@@ -1,7 +1,10 @@
 name: Publish to Zenodo
 
 on:
-  workflow_dispatch:  # Manual trigger only
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   publish-fig:
