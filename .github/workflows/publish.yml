@@ -5,12 +5,6 @@ on:
     branches:
       - main
   workflow_dispatch:
-# on:
-#   # Trigger when you publish a release via GitHub's release page
-#   release:
-#     types:
-#       - published
-#   workflow_dispatch:
 
 jobs:
   publish-fig:
@@ -35,8 +29,20 @@ jobs:
             cat .zenodo.json
           fi
       
+      - name: Check for existing Deposition
+        id: check_deposition
+        run: |
+          if [ -n "$DEPOSITION_ID" ]; then
+            echo "Using existing deposition with ID: $DEPOSITION_ID"
+            echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
+            echo "concept_id=$CONCEPT_ID" >> $GITHUB_OUTPUT
+          else
+            echo "No existing deposition found. A new deposition will be created."
+          fi
+      
       - name: Get or create Zenodo deposition
         id: zenodo_deposition
+        if: steps.check_deposition.outputs.DEPOSITION_ID == ''
         env:
           ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
         run: |
@@ -89,36 +95,13 @@ jobs:
             -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
           echo "Response: $RESPONSE"
       
-
-      # - name: Upload the ZIP file to Zenodo
-      #   env:
-      #     ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
-      #     DEPOSITION_ID: ${{ env.DEPOSITION_ID }}
-      #   run: |
-      #     echo "Uploading code.zip to Zenodo deposition $DEPOSITION_ID..."
-          
-      #     RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/files" \
-      #       -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
-      #       -H "Accept: application/json" \
-      #       -F "file=@code.zip;type=application/zip")
-      
-      #     echo "Upload response: $RESPONSE"
-      
-      #     if echo "$RESPONSE" | jq -e '.id' >/dev/null; then
-      #       echo "File uploaded successfully!"
-      #     else
-      #       echo "ERROR: Failed to upload file."
-      #       exit 1
-      #     fi
-        
       - name: Upload the ZIP file to Zenodo
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ZENODO_SANDBOX_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
         uses: zenodraft/action@0.13.3
         with:
-          # concept: ${{ steps.zenodo_deposition.outputs.concept_id }}
-          concept: 192985
+          concept: ${{ steps.zenodo_deposition.outputs.concept_id }}
           metadata: .zenodo.json
           publish: false
           sandbox: true
