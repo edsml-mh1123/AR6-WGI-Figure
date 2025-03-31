@@ -10,6 +10,8 @@ jobs:
   publish-fig:
     runs-on: ubuntu-latest
     name: Publish code to Zenodo
+    permissions:
+      contents: write
     steps:
       - name: Checkout the contents of your repository
         uses: actions/checkout@v4
