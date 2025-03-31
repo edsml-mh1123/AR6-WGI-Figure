@@ -115,7 +115,7 @@ jobs:
         with:
           concept: ${{ steps.zenodo_deposition.outputs.concept_id }}
           metadata: .zenodo.json
-          publish: false
+          publish: true
           sandbox: true
           filenames: |
             code.zip
