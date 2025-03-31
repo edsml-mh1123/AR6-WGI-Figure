@@ -119,7 +119,7 @@ jobs:
       #     verbose: true
 
       - name: Upload the ZIP file to Zenodo
-        uses: ipcc-ar7/publish-zenodo@v1.8
+        uses: ipcc-ar7/publish-zenodo@v1.9
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ZENODO_SANDBOX_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
