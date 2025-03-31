@@ -104,19 +104,6 @@ jobs:
           # Make IDs available to other steps
           echo "CONCEPT_ID=$CONCEPT_ID" >> $GITHUB_ENV
           echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
-    
-      - name: Upload the ZIP file to Zenodo
-        uses: zenodraft/action@0.13.3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ZENODO_SANDBOX_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
-        with:
-          metadata: .zenodo.json
-          filenames: |
-            code.zip
-          sandbox: true
-          publish: false
-          verbose: true
 
       - name: Upload the ZIP file to Zenodo
         env:
