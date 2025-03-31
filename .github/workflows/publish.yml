@@ -1,10 +1,10 @@
 name: Publish to Zenodo
 
 on:
-  pull_request:
-    branches:
-      - main
-  workflow_dispatch:
+  # Trigger when you publish a release via GitHub's release page
+  release:
+    types:
+      - published
 
 jobs:
   publish-fig:
