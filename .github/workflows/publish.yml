@@ -105,30 +105,44 @@ jobs:
           echo "CONCEPT_ID=$CONCEPT_ID" >> $GITHUB_ENV
           echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
     
-      # - name: Upload the ZIP file to Zenodo
-      #   uses: zenodraft/action@0.13.3
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     ZENODO_SANDBOX_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
-      #   with:
-      #     metadata: .zenodo.json
-      #     filenames: |
-      #       code.zip
-      #     sandbox: true
-      #     publish: false
-      #     verbose: true
-
       - name: Upload the ZIP file to Zenodo
-        uses: ipcc-ar7/publish-zenodo@v1.9
+        uses: zenodraft/action@0.13.3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ZENODO_SANDBOX_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
         with:
-          # Note that Zenodo only accepts root level files.
-          files: |
-            code.zip
           metadata: .zenodo.json
+          filenames: |
+            code.zip
           sandbox: true
           publish: false
-          concept: $(cat "$ID_STORAGE_FILE" | jq -r '.concept_id')
           verbose: true
+
+      - name: Upload the ZIP file to Zenodo
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ZENODO_SANDBOX_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
+        uses: zenodraft/action@0.13.3
+        with:
+          concept: $(cat "$ID_STORAGE_FILE" | jq -r '.concept_id')
+          metadata: .zenodo.json
+          publish: false
+          sandbox: true
+          filenames: |
+            code.zip
+          verbose: true
+
+      # - name: Upload the ZIP file to Zenodo
+      #   uses: ipcc-ar7/publish-zenodo@v1.9
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     ZENODO_SANDBOX_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
+      #   with:
+      #     # Note that Zenodo only accepts root level files.
+      #     files: |
+      #       code.zip
+      #     metadata: .zenodo.json
+      #     sandbox: true
+      #     publish: false
+      #     concept: $(cat "$ID_STORAGE_FILE" | jq -r '.concept_id')
+      #     verbose: true
