@@ -45,8 +45,6 @@ jobs:
               echo "Using stored IDs: Concept ID=$STORED_CONCEPT_ID, Deposition ID=$STORED_DEPOSITION_ID"
               echo "CONCEPT_ID=$STORED_CONCEPT_ID" >> $GITHUB_ENV
               echo "DEPOSITION_ID=$STORED_DEPOSITION_ID" >> $GITHUB_ENV
-              export CONCEPT_ID=$STORED_CONCEPT_ID
-              export DEPOSITION_ID=$STORED_DEPOSITION_ID
               exit 0
             fi
           fi
@@ -102,10 +100,8 @@ jobs:
           # Store IDs for future use
           echo "{\"concept_id\":\"$CONCEPT_ID\",\"deposition_id\":\"$DEPOSITION_ID\"}" > "$ID_STORAGE_FILE"
           echo "Saved IDs to $ID_STORAGE_FILE for future use"
-          echo "CONCEPT_ID=$CONCEPT_ID" >> $GITHUB_ENV
-          echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
-          export CONCEPT_ID=$CONCEPT_ID
-          export DEPOSITION_ID=$DEPOSITION_ID
+          
+          # Make IDs available to other steps
           echo "CONCEPT_ID=$CONCEPT_ID" >> $GITHUB_ENV
           echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
     
@@ -123,16 +119,16 @@ jobs:
       #     verbose: true
       
       - name: Upload the ZIP file to Zenodo
-        uses: ipcc-ar7/publish-zenodo@v1.9
+        uses: ipcc-ar7/publish-zenodo@v1.7
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ZENODO_SANDBOX_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
         with:
+          # Note that Zenodo only accepts root level files.
           files: |
             code.zip
           metadata: .zenodo.json
           sandbox: true
           publish: false
-          concept: ${{ steps.zenodo_deposition.outputs.CONCEPT_ID }}
+          concept: $(cat "$ID_STORAGE_FILE" | jq -r '.concept_id')
           verbose: true
-
