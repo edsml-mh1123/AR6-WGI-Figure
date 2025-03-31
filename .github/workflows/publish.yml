@@ -17,12 +17,6 @@ jobs:
       - name: Create ZIP of code folder
         run: zip -r code.zip code/
 
-      - name: Store ZIP as an artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: code-archive
-          path: code.zip
-
       - name: Debug `.zenodo.json` existence
         run: |
           if [ ! -f ".zenodo.json" ]; then
