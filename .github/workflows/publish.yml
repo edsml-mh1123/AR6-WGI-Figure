@@ -71,6 +71,9 @@ jobs:
           concept: ${{ env.DEPOSITION_ID }}
           files: |
             code.zip
+          sandbox: true
+          publish: false
+          verbose: true
 
       - name: Publish the Zenodo deposition
         if: success()
