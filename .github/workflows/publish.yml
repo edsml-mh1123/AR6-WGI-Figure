@@ -76,16 +76,23 @@ jobs:
           echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
           echo "concept_id=$CONCEPT_ID" >> $GITHUB_OUTPUT
 
-      - name: Debug Zenodo Deposition
+      - name: Debug Zenodo Concept ID
         env:
           ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
-          DEPOSITION_ID: ${{ env.DEPOSITION_ID }}
+          CONCEPT_ID: ${{ steps.zenodo_deposition.outputs.concept_id }}
         run: |
-          echo "Verifying if deposition exists: ID = $DEPOSITION_ID"
-          RESPONSE=$(curl -s -X GET "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID" \
+          echo "Checking Concept ID: $CONCEPT_ID"
+          RESPONSE=$(curl -s -X GET "https://sandbox.zenodo.org/api/deposit/depositions/$CONCEPT_ID" \
             -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
+          
           echo "Response: $RESPONSE"
       
+          if echo "$RESPONSE" | jq -e '.id' >/dev/null; then
+            echo "Concept ID is valid!"
+          else
+            echo "ERROR: Invalid Concept ID or it does not exist."
+            exit 1
+          fi
 
       # - name: Upload the ZIP file to Zenodo
       #   env:
