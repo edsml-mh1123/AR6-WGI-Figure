@@ -5,7 +5,7 @@ on:
     branches:
       - main
   workflow_dispatch:
-    
+
 jobs:
   publish-fig:
     runs-on: ubuntu-latest
@@ -28,92 +28,58 @@ jobs:
             echo "Contents of .zenodo.json:"
             cat .zenodo.json
           fi
-
+      
       - name: Get or create Zenodo deposition
         id: zenodo_deposition
         env:
           ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
         run: |
-          ID_STORAGE_FILE=".zenodo_ids.json"
-          
           echo "Testing Zenodo API access..."
           TEST_RESPONSE=$(curl -s -X GET "https://sandbox.zenodo.org/api/deposit/depositions" \
             -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
 
-          MESSAGE=$(echo "$TEST_RESPONSE" | jq -r '.message // .[0].message')
-          if [[ "$MESSAGE" != "null" ]]; then
-            echo "ERROR: API access issue - $MESSAGE"
+          if echo "$TEST_RESPONSE" | jq -e '.message' >/dev/null; then
+            echo "ERROR: $(echo $TEST_RESPONSE | jq -r '.message')"
             exit 1
           fi
-          
+
           echo "Creating new deposition..."
           CREATE_RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions" \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
             -d '{"metadata": {"title": "My Dataset", "upload_type": "dataset", "description": "Description", "creators": [{"name": "Author Name", "affiliation": "Affiliation"}]}}')
 
-          DEPOSITION_ID=$(echo "$CREATE_RESPONSE" | jq -r '.id')
-          CONCEPT_ID=$(echo "$CREATE_RESPONSE" | jq -r '.conceptrecid')
+          echo "Zenodo API Response: $CREATE_RESPONSE"
 
-          if [[ -z "$DEPOSITION_ID" || "$DEPOSITION_ID" == "null" ]]; then
-            echo "ERROR: Failed to create deposition"
-            echo "Response: $CREATE_RESPONSE"
+          CONCEPT_ID=$(echo "$CREATE_RESPONSE" | jq -r '.conceptrecid // empty')
+          DEPOSITION_ID=$(echo "$CREATE_RESPONSE" | jq -r '.id // empty')
+
+          if [ -z "$DEPOSITION_ID" ]; then
+            echo "ERROR: Failed to create deposition - Response: $CREATE_RESPONSE"
             exit 1
           fi
-          
-          echo "Created deposition: ID = $DEPOSITION_ID, Concept ID = $CONCEPT_ID"
-          echo "{\"concept_id\":\"$CONCEPT_ID\",\"deposition_id\":\"$DEPOSITION_ID\"}" > "$ID_STORAGE_FILE"
 
-          echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
+          if [ -z "$CONCEPT_ID" ]; then
+              echo "Warning: Concept ID is not available. Using Deposition ID instead."
+              CONCEPT_ID=$DEPOSITION_ID
+          fi
+
+          echo "Created deposition: ID = $DEPOSITION_ID, Concept ID = $CONCEPT_ID"
+
           echo "CONCEPT_ID=$CONCEPT_ID" >> $GITHUB_ENV
-          echo "deposition_id=$DEPOSITION_ID" >> $GITHUB_OUTPUT
+          echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
           echo "concept_id=$CONCEPT_ID" >> $GITHUB_OUTPUT
 
-      - name: Upload the ZIP file to Zenodo
+      - name: Debug Zenodo Deposition
         env:
           ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
           DEPOSITION_ID: ${{ env.DEPOSITION_ID }}
         run: |
-          echo "Uploading ZIP file to Zenodo..."
-          
-          BUCKET_URL=$(curl -s -X GET "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID" \
-            -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" | jq -r '.links.bucket')
-
-          if [[ "$BUCKET_URL" == "null" ]]; then
-            echo "ERROR: Failed to get bucket URL"
-            exit 1
-          fi
-
-          curl --progress-bar -s -X POST \
-            "$BUCKET_URL" \
-            -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
-            -H "Content-Type: application/octet-stream" \
-            --upload-file code.zip
-
-          echo "File uploaded successfully."
-
-      - name: Publish deposition
-        env:
-          ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
-          DEPOSITION_ID: ${{ env.DEPOSITION_ID }}
-        run: |
-          echo "Publishing deposition ID: $DEPOSITION_ID"
-
-          PUBLISH_RESPONSE=$(curl -s -X POST \
-            "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/actions/publish" \
-            -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
-
-          echo "Publish Response: $PUBLISH_RESPONSE"
-
-      - name: Debug Zenodo Concept
-        env:
-          ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
-          CONCEPT_ID: ${{ env.CONCEPT_ID }}
-        run: |
-          echo "Checking concept ID: $CONCEPT_ID"
-          RESPONSE=$(curl -s -X GET "https://sandbox.zenodo.org/api/records/$CONCEPT_ID" \
+          echo "Verifying if deposition exists: ID = $DEPOSITION_ID"
+          RESPONSE=$(curl -s -X GET "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID" \
             -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
           echo "Response: $RESPONSE"
+      
 
       
       # - name: Upload the ZIP file to Zenodo
