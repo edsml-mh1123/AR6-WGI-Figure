@@ -3,82 +3,86 @@ name: Publish to Zenodo
 on:
   release:
     types: [published]
-  workflow_dispatch:
 
 jobs:
-  publish-fig:
+  publish-to-zenodo:
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          persist-credentials: false
 
-      - name: Create ZIP of code
+      - name: Create ZIP of code folder
         run: zip -r code.zip code/
 
-      - name: Validate .zenodo.json
+      - name: Validate `.zenodo.json`
         run: |
           if [ ! -f ".zenodo.json" ]; then
-            echo "Error: .zenodo.json missing!"
+            echo ".zenodo.json file is missing!"
             exit 1
           fi
-          echo "Current metadata:"
-          cat .zenodo.json
+          echo ".zenodo.json exists and is valid."
 
-      - name: Get existing concept ID
-        id: get_concept
+      - name: Extract Concept ID from `.zenodo.json`
+        id: extract_concept_id
         run: |
           CONCEPT_ID=$(jq -r '.conceptrecid // empty' .zenodo.json)
-          echo "concept_id=$CONCEPT_ID" >> $GITHUB_OUTPUT
-          echo "CONCEPT_ID=$CONCEPT_ID" >> $GITHUB_ENV
+          echo "::set-output name=concept_id::$CONCEPT_ID"
+          echo "::set-env name=CONCEPT_ID::$CONCEPT_ID"
 
-      - name: Create/Update Zenodo deposition
+      - name: Create or update Zenodo deposition
         id: zenodo_deposition
         env:
-          ZENODO_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
+          ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
         run: |
           if [ -n "$CONCEPT_ID" ]; then
-            echo "Creating new version for concept $CONCEPT_ID"
-            RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions/$CONCEPT_ID/actions/newversion" \
-              -H "Authorization: Bearer $ZENODO_TOKEN")
+            echo "Creating a new version for Concept ID $CONCEPT_ID..."
+            RESPONSE=$(curl -s -X POST \
+              https://sandbox.zenodo.org/api/deposit/depositions/$CONCEPT_ID/actions/newversion \
+              -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
+            DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.links.latest_draft | split("/")[-1]')
           else
-            echo "Creating new deposition"
+            echo "Creating a new deposition..."
             METADATA=$(cat .zenodo.json)
-            RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions" \
-              -H "Authorization: Bearer $ZENODO_TOKEN" \
-              -H "Content-Type: application/json" \
+            RESPONSE=$(curl -s -X POST \
+              https://sandbox.zenodo.org/api/deposit/depositions \
+              -H 'Content-Type: application/json' \
+              -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
               -d "{\"metadata\": $METADATA}")
+            DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.id')
+            CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.conceptrecid')
           fi
 
-          DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.id')
-          NEW_CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.conceptrecid')
-          
-          echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
-          echo "CONCEPT_ID=$NEW_CONCEPT_ID" >> $GITHUB_ENV
+          echo "::set-output name=deposition_id::$DEPOSITION_ID"
+          echo "::set-output name=concept_id::$CONCEPT_ID"
+          echo "::set-env name=DEPOSITION_ID::$DEPOSITION_ID"
+          echo "::set-env name=CONCEPT_ID::$CONCEPT_ID"
 
-      - name: Update .zenodo.json with Concept ID
-        if: steps.zenodo_deposition.outputs.CONCEPT_ID != '' && steps.get_concept.outputs.concept_id == ''
+      - name: Update `.zenodo.json` with Concept ID (first-time only)
+        if: steps.extract_concept_id.outputs.concept_id == ''
         run: |
-          jq --arg concept_id "$CONCEPT_ID" '.conceptrecid = $concept_id' .zenodo.json > tmp.json
-          mv tmp.json .zenodo.json
-          
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
+          jq --arg concept_id "$CONCEPT_ID" '.conceptrecid = $concept_id' .zenodo.json > tmp.json && mv tmp.json .zenodo.json
+
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
           git add .zenodo.json
-          git commit -m "Update Zenodo concept ID"
+          git commit -m "[GitHub Actions] Add Concept ID to .zenodo.json"
           git push
 
       - name: Upload files to Zenodo
         uses: zenodraft/action@0.13.3
         with:
-          concept: ${{ steps.zenodo_deposition.outputs.CONCEPT_ID }}
+          concept: ${{ steps.zenodo_deposition.outputs.concept_id }}
           metadata: .zenodo.json
-          publish: true
+          publish: false # Disable auto-publish here; handle it manually below.
           sandbox: true
           filenames: |
             code.zip
+
+      - name: Publish deposition on Zenodo (manual step)
         env:
-          ZENODO_SANDBOX_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
+          ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
+        run: |
+          curl -X POST https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/actions/publish \
+            -H 'Authorization: Bearer $ZENODO_ACCESS_TOKEN'
