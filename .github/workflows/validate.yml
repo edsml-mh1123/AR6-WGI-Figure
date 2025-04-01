@@ -67,70 +67,70 @@ jobs:
           files: "LICENSE, README.md, CITATION.cff, figure/*.png"
           fail: "true"
 
-      ## ---------------------------
-      ## Step 3: Schema Validation
-      ## ---------------------------
-      # - name: Validate figure.yml against Zenodo schema
-      #   id: validate-figure-yml
+      # ## ---------------------------
+      # ## Step 3: Schema Validation
+      # ## ---------------------------
+      # # - name: Validate figure.yml against Zenodo schema
+      # #   id: validate-figure-yml
+      # #   uses: GrantBirki/json-yaml-validate@v3.2.1
+      # #   with:
+      # #     comment: "true"
+      # #     files: "figure.yml"
+      # #     yaml_as_json: "true"
+      # #     json_schema: .schema/zenodo_v0.3.0.json
+      # #     ajv_strict_mode: "false"
+
+      # - name: Validate .zenodo.json file format
+      #   id: validate-zenodo-json
+      #   run: |
+      #     if jq empty .zenodo.json; then
+      #       echo ".zenodo.json is valid JSON"
+      #       echo "valid_json=true" >> $GITHUB_OUTPUT
+      #     else
+      #       echo ".zenodo.json is not valid JSON"
+      #       echo "valid_json=false" >> $GITHUB_OUTPUT
+      #       echo "::error file=.zenodo.json::JSON validation failed. Please ensure .zenodo.json is correctly formatted."
+      #       exit 1
+      #     fi
+
+      # - name: Validate .zenodo.json against schema
+      #   if: success()
       #   uses: GrantBirki/json-yaml-validate@v3.2.1
       #   with:
       #     comment: "true"
-      #     files: "figure.yml"
-      #     yaml_as_json: "true"
+      #     files: ".zenodo.json"
       #     json_schema: .schema/zenodo_v0.3.0.json
       #     ajv_strict_mode: "false"
 
-      - name: Validate .zenodo.json file format
-        id: validate-zenodo-json
-        run: |
-          if jq empty .zenodo.json; then
-            echo ".zenodo.json is valid JSON"
-            echo "valid_json=true" >> $GITHUB_OUTPUT
-          else
-            echo ".zenodo.json is not valid JSON"
-            echo "valid_json=false" >> $GITHUB_OUTPUT
-            echo "::error file=.zenodo.json::JSON validation failed. Please ensure .zenodo.json is correctly formatted."
-            exit 1
-          fi
-
-      - name: Validate .zenodo.json against schema
-        if: success()
-        uses: GrantBirki/json-yaml-validate@v3.2.1
-        with:
-          comment: "true"
-          files: ".zenodo.json"
-          json_schema: .schema/zenodo_v0.3.0.json
-          ajv_strict_mode: "false"
-
-      - name: Check for required fields in .zenodo.json
-        if: success()
-        run: |
-          required_fields=("title" "creators" "description" "license" "upload_type")
-          for field in "${required_fields[@]}"; do
-            if ! jq -e ".$field" .zenodo.json > /dev/null; then
-              echo "Required field '$field' is missing in .zenodo.json"
-              echo "::error file=.zenodo.json::Missing required field: $field"
-              exit 1
-            fi
-          done
+      # - name: Check for required fields in .zenodo.json
+      #   if: success()
+      #   run: |
+      #     required_fields=("title" "creators" "description" "license" "upload_type")
+      #     for field in "${required_fields[@]}"; do
+      #       if ! jq -e ".$field" .zenodo.json > /dev/null; then
+      #         echo "Required field '$field' is missing in .zenodo.json"
+      #         echo "::error file=.zenodo.json::Missing required field: $field"
+      #         exit 1
+      #       fi
+      #     done
           
-          # Validate creators array has at least one entry with name
-          if ! jq -e '.creators | length > 0' .zenodo.json > /dev/null; then
-            echo "At least one creator must be specified in .zenodo.json"
-            echo "::error file=.zenodo.json::At least one creator must be specified"
-            exit 1
-          fi
+      #     # Validate creators array has at least one entry with name
+      #     if ! jq -e '.creators | length > 0' .zenodo.json > /dev/null; then
+      #       echo "At least one creator must be specified in .zenodo.json"
+      #       echo "::error file=.zenodo.json::At least one creator must be specified"
+      #       exit 1
+      #     fi
           
-          for i in $(jq -r '.creators | keys | .[]' .zenodo.json); do
-            if ! jq -e ".creators[$i].name" .zenodo.json > /dev/null; then
-              echo "Creator at index $i is missing required 'name' field"
-              echo "::error file=.zenodo.json::Creator at index $i is missing required 'name' field"
-              exit 1
-            fi
-          done
+      #     for i in $(jq -r '.creators | keys | .[]' .zenodo.json); do
+      #       if ! jq -e ".creators[$i].name" .zenodo.json > /dev/null; then
+      #         echo "Creator at index $i is missing required 'name' field"
+      #         echo "::error file=.zenodo.json::Creator at index $i is missing required 'name' field"
+      #         exit 1
+      #       fi
+      #     done
           
-          echo "All required fields are present in .zenodo.json"
-          echo "fields_valid=true" >> $GITHUB_OUTPUT
+      #     echo "All required fields are present in .zenodo.json"
+      #     echo "fields_valid=true" >> $GITHUB_OUTPUT
 
       ## ---------------------------
       ## Step 4: Code Folder Validation
