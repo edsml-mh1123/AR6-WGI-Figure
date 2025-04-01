@@ -9,7 +9,6 @@
       "orcid": "0009-0005-5453-6446"
     }
   ],
-  "prereserve_doi": true,
   "keywords": ["sea surface temperature", "visualization", "Python"],
   "license": "Apache-2.0",
   "version": "2.0.0",
