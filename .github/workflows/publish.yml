@@ -49,7 +49,7 @@ jobs:
               -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
             DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.links.latest_draft | split("/")[-1]')
           else
-            echo "Creating a new deposition..."
+            echo "Creating new deposition..."
             METADATA=$(cat .zenodo.json)
             RESPONSE=$(curl -s -X POST \
               https://sandbox.zenodo.org/api/deposit/depositions \
@@ -59,10 +59,9 @@ jobs:
             DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.id')
             CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.conceptrecid')
 
-            # Save concept ID to file for future use
+            # Save concept ID to file
             echo "$CONCEPT_ID" > zenodo_concept_id.txt
           fi
-
           echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
 
       - name: Commit Concept ID file (first-time only)
@@ -72,14 +71,14 @@ jobs:
           git config --global user.email "${{ github.actor }}@users.noreply.github.com"
           git add zenodo_concept_id.txt
           git commit -m "[GitHub Actions] Add Zenodo Concept ID"
-          git push
+          git push origin HEAD:main  # Fix: Push to main branch explicitly
 
       - name: Upload files to Zenodo
         uses: zenodraft/action@0.13.3
         with:
           concept: ${{ steps.get_concept_id.outputs.concept_id }}
           metadata: .zenodo.json
-          publish: false # Disable auto-publish here; we handle it manually below.
+          publish: false
           sandbox: true
           filenames: |
             code.zip
