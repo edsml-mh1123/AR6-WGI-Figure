@@ -3,6 +3,7 @@ name: Publish to Zenodo
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 jobs:
   publish-to-zenodo:
@@ -43,19 +44,25 @@ jobs:
           ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
         run: |
           if [ -n "${{ steps.get_concept_id.outputs.concept_id }}" ]; then
-            # Publish existing deposition first
-            curl -X POST "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/actions/publish" \
-              -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN"
-            
-            # Create new version using CONCEPT_ID
+            # Create new version using existing Concept ID
             RESPONSE=$(curl -s -X POST \
               "https://sandbox.zenodo.org/api/deposit/depositions/${{ steps.get_concept_id.outputs.concept_id }}/actions/newversion" \
               -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
             DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.id')
+            echo "concept_id=${{ steps.get_concept_id.outputs.concept_id }}" >> $GITHUB_OUTPUT
+            echo "deposition_id=$DEPOSITION_ID" >> $GITHUB_OUTPUT
           else
-            # ... [existing new deposition logic] ...
+            # Create new deposition
+            RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions" \
+              -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
+              -H "Content-Type: application/json" \
+              --data '{}')
+            DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.id')
+            CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.conceptrecid')
+            echo "$CONCEPT_ID" > zenodo_concept_id.txt
+            echo "concept_id=$CONCEPT_ID" >> $GITHUB_OUTPUT
+            echo "deposition_id=$DEPOSITION_ID" >> $GITHUB_OUTPUT
           fi
-            
 
       - name: Commit Concept ID file (first-time only)
         if: steps.get_concept_id.outputs.concept_id == ''
@@ -69,9 +76,9 @@ jobs:
       - name: Upload files to Zenodo
         uses: zenodraft/action@0.13.3
         with:
-          concept: ${{ steps.get_concept_id.outputs.concept_id }}
+          concept: ${{ steps.zenodo_deposition.outputs.concept_id }}
           metadata: .zenodo.json
-          publish: false # Disable auto-publish here; we handle it manually below.
+          publish: false
           sandbox: true
           filenames: |
             code.zip
@@ -80,5 +87,5 @@ jobs:
         env:
           ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
         run: |
-          curl -X POST https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/actions/publish \
-            -H 'Authorization: Bearer $ZENODO_ACCESS_TOKEN'
+          curl -X POST "https://sandbox.zenodo.org/api/deposit/depositions/${{ steps.zenodo_deposition.outputs.deposition_id }}/actions/publish" \
+            -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN"
