@@ -44,23 +44,33 @@ jobs:
           ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
         run: |
           if [ -n "${{ steps.get_concept_id.outputs.concept_id }}" ]; then
-            # Get latest deposition ID from concept ID
+            # Get latest deposition ID from concept
             CONCEPT_RESPONSE=$(curl -s -X GET \
               "https://sandbox.zenodo.org/api/deposit/depositions?q=conceptrecid:${{ steps.get_concept_id.outputs.concept_id }}" \
               -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
+            LATEST_ID=$(echo "$CONCEPT_RESPONSE" | jq -r '.[0].id')
             
-            # Extract latest version ID (first in array)
-            DEPOSITION_ID=$(echo "$CONCEPT_RESPONSE" | jq -r '.[0].id')
-            echo "Latest deposition ID: $DEPOSITION_ID"
-            
-            # Create new version from latest ID
+            # Create new version using deposition ID
             NEW_VERSION_RESPONSE=$(curl -s -X POST \
-              "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/actions/newversion" \
+              "https://sandbox.zenodo.org/api/deposit/depositions/$LATEST_ID/actions/newversion" \
               -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
             
-            # Extract new version ID from response
-            NEW_DEPOSITION_ID=$(echo "$NEW_VERSION_RESPONSE" | jq -r '.id')
-            CONCEPT_ID=$(echo "$NEW_VERSION_RESPONSE" | jq -r '.concept
+            DEPOSITION_ID=$(echo "$NEW_VERSION_RESPONSE" | jq -r '.id')
+            CONCEPT_ID=$(echo "$NEW_VERSION_RESPONSE" | jq -r '.conceptrecid')
+          else
+            # Create brand new deposition
+            NEW_DEPOSIT_RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions" \
+              -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
+              -H "Content-Type: application/json" \
+              --data '{}')
+            
+            DEPOSITION_ID=$(echo "$NEW_DEPOSIT_RESPONSE" | jq -r '.id')
+            CONCEPT_ID=$(echo "$NEW_DEPOSIT_RESPONSE" | jq -r '.conceptrecid')
+            echo "$CONCEPT_ID" > zenodo_concept_id.txt
+          fi
+          
+          echo "concept_id=$CONCEPT_ID" >> $GITHUB_OUTPUT
+          echo "deposition_id=$DEPOSITION_ID" >> $GITHUB_OUTPUT
       
       - name: Commit Concept ID file (first-time only)
         if: steps.get_concept_id.outputs.concept_id == ''
