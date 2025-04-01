@@ -96,18 +96,18 @@ jobs:
 
       - name: Upload files to Zenodo
         env:
-              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              ZENODO_SANDBOX_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ZENODO_SANDBOX_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
+          ACTIONS_STEP_DEBUG: true
         uses: zenodraft/action@0.13.3
         with:
-          # concept: ${{ steps.zenodo_deposition.outputs.concept_id }}
-          concept: 193278
+          concept: 193278 # test concept ID for sandbox
           metadata: .zenodo.json
           publish: false
           sandbox: true
           filenames: |
             code.zip
-
+        
       - name: Publish deposition on Zenodo
         env:
           ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
