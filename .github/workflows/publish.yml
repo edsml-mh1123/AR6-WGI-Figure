@@ -5,6 +5,9 @@ name: Publish to Zenodo
 #     types: [published]
 
 on:
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
