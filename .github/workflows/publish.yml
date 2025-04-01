@@ -43,13 +43,15 @@ jobs:
           ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
         run: |
           if [ -n "${{ steps.get_concept_id.outputs.concept_id }}" ]; then
-            echo "Creating a new version for Concept ID ${{ steps.get_concept_id.outputs.concept_id }}..."
+            echo "Creating new version for Concept ID ${{ steps.get_concept_id.outputs.concept_id }}..."
             RESPONSE=$(curl -s -X POST \
               https://sandbox.zenodo.org/api/deposit/depositions/${{ steps.get_concept_id.outputs.concept_id }}/actions/newversion \
               -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
-            DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.links.latest_draft | split("/")[-1]')
+            
+            # Fixed deposition ID extraction
+            DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.id')
           else
-            echo "Creating a new deposition..."
+            echo "Creating new deposition..."
             METADATA=$(cat .zenodo.json)
             RESPONSE=$(curl -s -X POST \
               https://sandbox.zenodo.org/api/deposit/depositions \
@@ -58,12 +60,9 @@ jobs:
               -d "{\"metadata\": $METADATA}")
             DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.id')
             CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.conceptrecid')
-
-            # Save concept ID to file for future use
+            
             echo "$CONCEPT_ID" > zenodo_concept_id.txt
-          fi
-
-          echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
+          fi        
 
       - name: Commit Concept ID file (first-time only)
         if: steps.get_concept_id.outputs.concept_id == ''
