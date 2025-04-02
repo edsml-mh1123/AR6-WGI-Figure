@@ -64,18 +64,17 @@ jobs:
           else
             echo "Found existing Concept ID: $CONCEPT_ID"
             
-            # Create a new version of the existing deposition
+            # Try to create a new version of the existing deposition
             NEW_VERSION_RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions/$CONCEPT_ID/actions/newversion" \
               -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
             
-            # Check if the record has been deleted (status 410)
             STATUS=$(echo "$NEW_VERSION_RESPONSE" | jq -r '.status // empty')
             MESSAGE=$(echo "$NEW_VERSION_RESPONSE" | jq -r '.message // empty')
 
-            if [[ "$STATUS" == "410" ]]; then
-              echo "Error: The record with Concept ID $CONCEPT_ID has been deleted. Creating a new deposition instead."
+            if [[ "$STATUS" == "404" ]]; then
+              echo "Error: The persistent identifier is not registered. Creating a new deposition instead."
               
-              # Create a new deposition since the old one is deleted
+              # Create a new deposition since the old one is invalid or unregistered
               NEW_DEPOSITION_RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions" \
                 -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
                 -H "Content-Type: application/json" \
@@ -89,7 +88,7 @@ jobs:
               DEPOSITION_ID=$(echo "$NEW_DEPOSITION_RESPONSE" | jq -r '.id')
               echo "Created new deposition with ID: $DEPOSITION_ID"
             else
-              # Extract the latest draft deposition ID from the response
+              # Extract the latest draft deposition URL from the response
               DEPOSITION_URL=$(echo "$NEW_VERSION_RESPONSE" | jq -r '.links.latest_draft // empty')
               
               if [ -z "$DEPOSITION_URL" ]; then
@@ -99,21 +98,6 @@ jobs:
       
               # Fetch the draft deposition details to get its ID
               DRAFT_RESPONSE=$(curl -s -X GET "$DEPOSITION_URL" \
-                -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
-      
-              DEPOSITION_ID=$(echo "$DRAFT_RESPONSE" | jq -r '.id')
-              
-              echo "Updated existing deposition with ID: $DEPOSITION_ID"
-            fi
-          fi
-      
-          # Export DEPOSITION_ID for next steps
-          if [ ! -z "$DEPOSITION_ID" ]; then
-            echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
-          else
-            echo "Error: DEPOSITION_ID is empty."
-            exit 1
-          fi
 
       - name: Upload the ZIP file to Zenodo
         env:
