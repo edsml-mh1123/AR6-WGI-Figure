@@ -18,16 +18,6 @@ jobs:
       - name: Create ZIP of code folder
         run: zip -r code.zip code/
 
-      - name: Debug `.zenodo.json` existence
-        run: |
-          if [ ! -f ".zenodo.json" ]; then
-            echo "Error: .zenodo.json does not exist!"
-            exit 1
-          else
-            echo "Contents of .zenodo.json:"
-            cat .zenodo.json
-          fi
-
       - name: Get or create Zenodo deposition
         id: zenodo_deposition
         env:
@@ -122,15 +112,6 @@ jobs:
             -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
             -F "file=@code.zip;filename=code.zip"
   
-      # - name: Check if code.zip exists
-      #   run: |
-      #     if [ -f "code.zip" ]; then
-      #       echo "code.zip exists."
-      #     else
-      #       echo "code.zip does not exist."
-      #       exit 1
-      #     fi
-
       - name: Keep in Draft Mode
         env:
           ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
