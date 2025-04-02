@@ -49,7 +49,7 @@ jobs:
           fi
       
           # Step 3: Check if an existing concept is found
-          EXISTING_CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.[0].conceptdoi // empty')
+          EXISTING_CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.hits.hits[0]._source.conceptdoi // empty')
       
           if [ -n "$EXISTING_CONCEPT_ID" ]; then
             # If a concept exists, use it and create a new deposition
@@ -102,7 +102,6 @@ jobs:
           # Step 6: Set the concept and deposition ID as GitHub environment variables for subsequent steps
           echo "CONCEPT_ID=$CONCEPT_ID" >> $GITHUB_ENV
           echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
-      
       
       - name: Upload the ZIP file to Zenodo
         env:
