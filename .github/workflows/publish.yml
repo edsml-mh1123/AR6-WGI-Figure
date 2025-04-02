@@ -101,7 +101,7 @@ jobs:
           ACTIONS_STEP_DEBUG: true
         uses: zenodraft/action@0.13.3
         with:
-          concept: 193278 # test concept ID for sandbox
+          concept: ${{ steps.get_concept_id.outputs.concept_id }}
           metadata: .zenodo.json
           publish: false
           sandbox: true
