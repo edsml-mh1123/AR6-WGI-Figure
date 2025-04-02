@@ -31,74 +31,60 @@ jobs:
 
       - name: Create deposition (save concept_id or use existing one)
         env:
-          ZENODO_SANDBOX_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }} 
+          ZENODO_SANDBOX_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
         id: create_deposition
         run: |
           # Check if .zenodo.json exists and contains a concept_id
-          concept_id=$(jq -r '.metadata.id[0]' .zenodo.json 2>/dev/null)
-
-          # no concept_id found, create a new deposition
-          if [ "$concept_id" == "null" ]; then
+          if [ -f ".zenodo.json" ]; then
+            concept_id=$(jq -r '.metadata.id[0]' .zenodo.json 2>/dev/null)
+          else
+            concept_id="null"
+          fi
+      
+          # If no concept_id found, create a new deposition
+          if [ "$concept_id" == "null" ] || [ -z "$concept_id" ]; then
             echo "No concept_id found, creating a new deposition."
-            
+      
             # Create a new deposition via Zenodo API
             response=$(curl -s -X POST "https://zenodo.org/api/deposit/depositions" \
               -H "Authorization: Bearer $ZENODO_SANDBOX_ACCESS_TOKEN" \
-              -F "metadata=@.zenodo.json")
-            
+              -H "Content-Type: application/json" \
+              --data-binary @.zenodo.json)
+      
             # Check if the API call was successful
-            if [ $? -ne 0 ] || [ -z "$(echo $response | jq -r '.id')" ]; then
+            if [ $? -ne 0 ] || [ -z "$(echo "$response" | jq -r '.id')" ]; then
               echo "Error: Failed to create deposition."
               exit 1
             fi
-            
-            # Extract the concept_id from the response
-            concept_id=$(echo $response | jq -r '.id')
-            deposition_id=$(echo $response | jq -r '.conceptrecid')
-
-            echo "New concept_id: $concept_id"
       
-            # # Save the concept_id to .zenodo.json for future use
-            # if jq --arg concept_id "$concept_id" '.metadata.id = [$concept_id]' .zenodo.json > .zenodo.json.tmp; then
-            #   mv .zenodo.json.tmp .zenodo.json
-            #   echo "concept_id successfully saved to .zenodo.json."
-              
-            #   # Automatically set Git user name and email using environment variables
-            #   git config --global user.email "${GIT_USER_EMAIL:-your-email@example.com}"
-            #   git config --global user.name "${GIT_USER_NAME:-Your Name}"
-
-            #   # Stage the .zenodo.json file for commit
-            #   git add .zenodo.json
-
-            #   # Commit the changes with a message
-            #   git commit -m "Update concept_id in .zenodo.json"
-
-            #   # Push the changes to GitHub (make sure you're on the correct branch)
-            #   git push origin $(git rev-parse --abbrev-ref HEAD)
-            # else
-            #   echo "Failed to update .zenodo.json."
-            #   exit 1
-            # fi
-
-          # with concept_id found, update the existing deposition
-          else
-            echo "Concept ID already exists, updating deposition."
-      
-            # Update the deposition using the existing concept_id
-            response=$(curl -s -X PUT "https://zenodo.org/api/deposit/depositions/$concept_id" \
-              -H "Authorization: Bearer $ZENODO_SANDBOX_ACCESS_TOKEN" \
-              -F "metadata=@.zenodo.json")
-            
-            # Check if the update was successful
-            if [ $? -ne 0 ]; then
-              echo "Error: Failed to update deposition."
-              exit 1
-            fi
-            # Extract the deposition ID from the response
+            # Extract the concept_id and deposition_id from the response
+            concept_id=$(echo "$response" | jq -r '.id')
             deposition_id=$(echo "$response" | jq -r '.conceptrecid')
-
+      
+            echo "New concept_id: $concept_id"
+            echo "New deposition_id: $deposition_id"
+          else
+            echo "Using existing concept_id: $concept_id"
           fi
       
+        # # with concept_id found, update the existing deposition
+        # else
+        #   echo "Concept ID already exists, updating deposition."
+    
+        #   # Update the deposition using the existing concept_id
+        #   response=$(curl -s -X PUT "https://zenodo.org/api/deposit/depositions/$concept_id" \
+        #     -H "Authorization: Bearer $ZENODO_SANDBOX_ACCESS_TOKEN" \
+        #     -F "metadata=@.zenodo.json")
+          
+        #   # Check if the update was successful
+        #   if [ $? -ne 0 ]; then
+        #     echo "Error: Failed to update deposition."
+        #     exit 1
+        #   fi
+        #   # Extract the deposition ID from the response
+        #   deposition_id=$(echo "$response" | jq -r '.conceptrecid')
+
+        # fi
       
       - name: Upload the ZIP file to Zenodo
         env:
