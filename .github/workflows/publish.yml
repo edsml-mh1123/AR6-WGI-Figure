@@ -1,11 +1,5 @@
 name: Publish to Zenodo
 
-# on:
-#   workflow_run:
-#     workflows: ["Repository Validation"]
-#     types:
-#       - completed
-
 on:
   pull_request:
     branches:
