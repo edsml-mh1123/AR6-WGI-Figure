@@ -22,7 +22,7 @@ jobs:
           # Note that Zenodo only accepts root level files.
           files: |
             ./code
-          metadata: version.yml
+          metadata: version_metadata.yml
           sandbox: true
           publish: true
           concept: 193507
