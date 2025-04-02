@@ -14,6 +14,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Check version consistency
+        run: |
+          CFF_VERSION=$(yq '.version' CITATION.cff)
+          ZENODO_VERSION=$(jq '.version' .zenodo.json)
+          if [ "$CFF_VERSION" != "$ZENODO_VERSION" ]; then
+            echo "Version mismatch detected!"
+            echo "CITATION.cff version: $CFF_VERSION"
+            echo ".zenodo.json version: $ZENODO_VERSION"
+            exit 1
+          fi
+      
       - uses: ipcc-ar7/publish-zenodo@v1.9
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
