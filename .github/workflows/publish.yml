@@ -121,14 +121,32 @@ jobs:
         run: |
           set -x  # Enable debug mode
 
+          # Validate DEPOSITION_ID
+          if [ -z "$DEPOSITION_ID" ]; then
+            echo "Error: DEPOSITION_ID is not set or empty!"
+            exit 1
+          fi
+
+          # Check if code.zip exists
           if [ ! -f "code.zip" ]; then
             echo "Error: code.zip file does not exist!"
             exit 1
           fi
 
-          curl --fail-with-body -X POST "https://sandbox.zenodo.org/api/deposit/depositions/DEPOSITION_ID/files" \
+          # Upload file to Zenodo
+          RESPONSE=$(curl --fail-with-body -s -X POST \
+            "https://sandbox.zenodo.org/api/deposit/depositions/DEPOSITION_ID/files" \
             -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
-            -F "file=@code.zip;filename=code.zip"
+            -F "file=@code.zip;filename=code.zip")
+
+          if [[ $? -ne 0 ]]; then
+            echo "Error uploading file to Zenodo."
+            echo "Response: $RESPONSE"
+            exit 1
+          fi
+
+          echo "File uploaded successfully!"
+
 
       - name: Keep in Draft Mode (Optional)
         env:
