@@ -46,7 +46,14 @@ jobs:
             deposition_id=$(echo $response | jq -r '.conceptrecid')
       
             # Save the concept_id to .zenodo.json for future use
-            jq --arg concept_id "$concept_id" '.metadata.id = [$concept_id]' .zenodo.json > .zenodo.json.tmp && mv .zenodo.json.tmp .zenodo.json
+            if jq --arg concept_id "$concept_id" '.metadata.id = [$concept_id]' .zenodo.json > .zenodo.json.tmp; then
+              mv .zenodo.json.tmp .zenodo.json
+              echo "concept_id successfully saved to .zenodo.json."
+            else
+              echo "Failed to update .zenodo.json."
+              exit 1
+            fi
+
           # with concept_id found, update the existing deposition
           else
             echo "Concept ID already exists, updating deposition."
