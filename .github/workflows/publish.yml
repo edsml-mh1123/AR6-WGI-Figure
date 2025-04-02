@@ -27,31 +27,41 @@ jobs:
             echo "Error: ZENODO_ACCESS_TOKEN is not set."
             exit 1
           fi
-
+      
           # Fetch existing depositions (check if there's an existing Concept)
           RESPONSE=$(curl -s -X GET "$ZENODO_API_URL" -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
-
-          # Check if there's an existing Concept, else create a new one
-          if [ "$(echo "$RESPONSE" | jq length)" -eq 0 ]; then
-            echo "No existing depositions found. Creating a new Concept and Deposition..."
-            RESPONSE=$(curl -s -X POST "$ZENODO_API_URL" \
-              -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
-              -H "Content-Type: application/json" \
-              --data '{}')
+      
+          # Log the full response for debugging
+          echo "Zenodo Response: $RESPONSE"
+      
+          # Check if the response is an array or object and parse accordingly
+          if echo "$RESPONSE" | jq 'type' | grep -q '"array"'; then
+            # If the response is an array, proceed with your logic
+            if [ "$(echo "$RESPONSE" | jq length)" -eq 0 ]; then
+              echo "No existing depositions found. Creating a new Concept and Deposition..."
+              RESPONSE=$(curl -s -X POST "$ZENODO_API_URL" \
+                -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
+                -H "Content-Type: application/json" \
+                --data '{}')
+            fi
+      
+            # Parse the Concept ID and Deposition ID
+            CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.[0].conceptrecid')
+            DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.[0].id')
+          else
+            # If the response is an object, parse it accordingly
+            CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.conceptrecid')
+            DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.id')
           fi
-
-          # Parse the Concept ID and Deposition ID
-          CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.conceptrecid')
-          DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.id')
-
+      
           if [ -z "$CONCEPT_ID" ] || [ "$CONCEPT_ID" = "null" ]; then
             echo "Error: Failed to fetch or create Concept."
             exit 1
           fi
-
+      
           echo "Using Concept ID: $CONCEPT_ID"
           echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
-
+      
       - name: Upload ZIP to Zenodo
         env:
           ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
