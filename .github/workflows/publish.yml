@@ -51,14 +51,6 @@ jobs:
               echo "$RESPONSE"
           }
 
-          # Ensure the access token is set
-          if [ -z "$ZENODO_ACCESS_TOKEN" ]; then
-              echo "Error: ZENODO_ACCESS_TOKEN is not set."
-              exit 1
-          fi
-
-          echo "Token length: ${#ZENODO_ACCESS_TOKEN}"
-
           # Fetch existing depositions from Zenodo API
           RESPONSE=$(api_request "GET" "https://sandbox.zenodo.org/api/deposit/depositions" "" "$ZENODO_ACCESS_TOKEN")
 
@@ -72,9 +64,15 @@ jobs:
           else
               # Create a new concept
               echo "No existing concept found. Creating a new concept..."
-              CONCEPT_RESPONSE=$(api_request "POST" "https://sandbox.zenodo.org/api/concepts" '{"metadata": {"title": "New Concept"}}' "$ZENODO_ACCESS_TOKEN")
+              CONCEPT_RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/concepts" \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
+              --data '{"metadata": {"title": "New Concept"}}')
 
+              echo "CONCEPT_RESPONSE: $CONCEPT_RESPONSE"
+              
               CONCEPT_ID=$(echo "$CONCEPT_RESPONSE" | jq -r '.conceptdoi // empty')
+
               if [ -z "$CONCEPT_ID" ]; then
                   echo "Error: Failed to retrieve new concept DOI."
                   exit 1
@@ -82,6 +80,7 @@ jobs:
 
               echo "Created new concept with DOI: $CONCEPT_ID"
           fi
+         
 
           # Create a new deposition for the concept
           echo "Creating a new deposition for concept DOI: $CONCEPT_ID"
