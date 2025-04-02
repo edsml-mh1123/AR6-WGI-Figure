@@ -18,7 +18,7 @@ jobs:
       - name: Create ZIP of code folder
         run: zip -r code.zip code/
 
-      - name: Get or create Zenodo deposition
+      - name: Get or create Zenodo Concept, with new deposition
         id: zenodo_deposition
         env:
           ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
@@ -28,75 +28,34 @@ jobs:
             echo "Error: ZENODO_ACCESS_TOKEN is not set."
             exit 1
           fi
-
-          echo "Token length: ${#ZENODO_ACCESS_TOKEN}"
-
-          # Fetch existing depositions from Zenodo API
-          RESPONSE=$(curl -s -X GET "https://sandbox.zenodo.org/api/deposit/depositions" \
-            -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
-
+      
+          # Define the existing Concept DOI (replace with actual if needed)
+          CONCEPT_DOI="10.5072/zenodo.193485"
+      
+          echo "Using Concept DOI: $CONCEPT_DOI"
+      
+          # Create a new deposition under this concept
+          RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
+            -d "{\"metadata\": {\"prereserve_doi\": true, \"title\": \"Your Project Title\", \"upload_type\": \"software\", \"description\": \"Your description here\", \"creators\": [{\"name\": \"Your Name\"}], \"conceptdoi\": \"$CONCEPT_DOI\"}}")
+      
           if [[ $? -ne 0 || -z "$RESPONSE" ]]; then
-            echo "Error fetching deposition list from Zenodo."
+            echo "Error creating new deposition."
             exit 1
           fi
-
+      
           echo "Zenodo API Response: $RESPONSE"
-
-          # Validate JSON response
-          if ! echo "$RESPONSE" | jq . >/dev/null 2>&1; then
-            echo "Error: Invalid JSON response from Zenodo API."
+      
+          # Extract the new deposition ID
+          DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.id // empty')
+          if [ -z "$DEPOSITION_ID" ]; then
+            echo "Error: Failed to retrieve new Deposition ID."
             exit 1
           fi
-
-          CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.[0].conceptdoi // empty')
-          echo "Extracted Concept ID: ${CONCEPT_ID:-None}"
-
-          # Create a new deposition if no Concept ID exists
-          if [ -z "$CONCEPT_ID" ]; then
-            echo "No existing deposition found. Creating a new deposition..."
-
-            # Ensure .zenodo.json exists
-            if [ ! -f .zenodo.json ]; then
-              echo "Error: .zenodo.json file not found."
-              exit 1
-            fi
-
-            echo "Validating .zenodo.json format..."
-            cat .zenodo.json | jq . >/dev/null 2>&1
-            if [[ $? -ne 0 ]]; then
-              echo "Error: .zenodo.json is not a valid JSON file."
-              exit 1
-            fi
-
-            RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions" \
-              -H "Content-Type: application/json" \
-              -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
-              -d @.zenodo.json)
-
-            if [[ $? -ne 0 || -z "$RESPONSE" ]]; then
-              echo "Error creating new deposition."
-              exit 1
-            fi
-
-            echo "Zenodo API Response: $RESPONSE"
-
-            DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.id // empty')
-            if [ -z "$DEPOSITION_ID" ]; then
-              echo "Error: Failed to retrieve Deposition ID."
-              exit 1
-            fi
-
-            echo "Created new deposition with ID: $DEPOSITION_ID"
-          else
-            DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.[0].id // empty')
-            if [ -z "$DEPOSITION_ID" ]; then
-              echo "Error: Failed to retrieve Deposition ID from existing depositions."
-              exit 1
-            fi
-
-            echo "Using existing deposition with ID: $DEPOSITION_ID"
-          fi
-
+      
+          echo "Created new deposition with ID: $DEPOSITION_ID"
+      
           # Export DEPOSITION_ID for next steps
           echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
 
