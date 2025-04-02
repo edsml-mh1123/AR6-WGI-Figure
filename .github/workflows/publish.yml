@@ -27,12 +27,14 @@ jobs:
             exit 1
           fi
 
-          API_URL="https://sandbox.zenodo.org/api/deposit/depositions"
-          RESPONSE=$(curl -s -X GET "$API_URL" -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
+          # Fetch existing depositions by Concept ID
+          RESPONSE=$(curl -s -X GET "https://sandbox.zenodo.org/api/deposit/depositions" \
+            -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
 
+          # Check if we have any existing depositions
           if [ "$(echo "$RESPONSE" | jq length)" -eq 0 ]; then
             echo "No existing depositions found. Creating a new one..."
-            CREATE_RESPONSE=$(curl -s -X POST "$API_URL" \
+            CREATE_RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions" \
               -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
               -H "Content-Type: application/json" \
               --data '{}')
@@ -45,29 +47,22 @@ jobs:
               exit 1
             fi
           else
-            DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.[0].id')
+            # Use the existing Concept ID and create a new Deposition
             CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.[0].conceptrecid')
-            STATE=$(echo "$RESPONSE" | jq -r '.[0].state')
+            CREATE_NEW_DEPOSITION_RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions" \
+              -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
+              -H "Content-Type: application/json" \
+              --data '{"conceptrecid": "'"$CONCEPT_ID"'"}')
 
-            echo "Using existing Deposition ID: $DEPOSITION_ID (Concept ID: $CONCEPT_ID, State: $STATE)"
+            DEPOSITION_ID=$(echo "$CREATE_NEW_DEPOSITION_RESPONSE" | jq -r '.id')
 
-            if [ "$STATE" = "published" ]; then
-              echo "Creating a new version..."
-              VERSION_RESPONSE=$(curl -s -X POST "$API_URL/$DEPOSITION_ID/actions/newversion" \
-                -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
-
-              NEW_DEPOSITION_ID=$(echo "$VERSION_RESPONSE" | jq -r '.links.latest_draft' | grep -o '[0-9]*$')
-
-              if [ -z "$NEW_DEPOSITION_ID" ]; then
-                echo "Error: Failed to create a new version."
-                exit 1
-              fi
-
-              echo "New version created: $NEW_DEPOSITION_ID"
-              DEPOSITION_ID=$NEW_DEPOSITION_ID
+            if [ -z "$DEPOSITION_ID" ] || [ "$DEPOSITION_ID" = "null" ]; then
+              echo "Error: Failed to create a new deposition under the existing Concept."
+              exit 1
             fi
           fi
 
+          echo "Using Concept ID: $CONCEPT_ID"
           echo "Final Deposition ID: $DEPOSITION_ID"
           echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
 
