@@ -49,7 +49,9 @@ jobs:
           fi
 
           CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.[0].conceptrecid // empty')
+          DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.[0].id // empty')
           echo "Extracted Concept ID: ${CONCEPT_ID:-None}"
+          echo "Extracted Deposition ID: ${DEPOSITION_ID:-None}"
 
           # Create a new deposition if no Concept ID exists
           if [ -z "$CONCEPT_ID" ]; then
@@ -82,20 +84,22 @@ jobs:
 
             DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.id // empty')
             CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.conceptrecid // empty')
-            if [ -z "$DEPOSITION_ID" ]; then
-              echo "Error: Failed to retrieve Deposition ID."
-              exit 1
-            fi
 
             echo "Created new deposition with ID: $DEPOSITION_ID"
             echo "New Concept ID: $CONCEPT_ID"
           else
+            # Create a new version from existing deposition
+            VERSION_RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/actions/newversion" \
+              -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
+            NEW_DEPOSITION_ID=$(echo "$VERSION_RESPONSE" | jq -r '.links.latest_draft // empty' | awk -F'/' '{print $NF}')
+            if [ -z "$NEW_DEPOSITION_ID" ]; then
+              echo "Error: Failed to create new version."
             DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.[0].id // empty')
             if [ -z "$DEPOSITION_ID" ]; then
               echo "Error: Failed to retrieve Deposition ID from existing depositions."
               exit 1
             fi
-
+            DEPOSITION_ID=$NEW_DEPOSITION_ID
             echo "Using existing deposition with ID: $DEPOSITION_ID"
           fi
 
