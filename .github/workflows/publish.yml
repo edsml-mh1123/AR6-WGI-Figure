@@ -78,7 +78,7 @@ jobs:
             # else
             #   echo "Failed to update .zenodo.json."
             #   exit 1
-            fi
+            # fi
 
           # with concept_id found, update the existing deposition
           else
