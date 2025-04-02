@@ -25,9 +25,9 @@ jobs:
         run: |
           # Check if .zenodo.json exists and contains a concept_id
           concept_id=$(jq -r '.metadata.id[0]' .zenodo.json 2>/dev/null)
-          
+
           # no concept_id found, create a new deposition
-          if [ -z "$concept_id" ]; then
+          if [ "$concept_id" == "null" ]; then
             echo "No concept_id found, creating a new deposition."
             
             # Create a new deposition via Zenodo API
