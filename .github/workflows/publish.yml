@@ -45,7 +45,7 @@ jobs:
             exit 1
           fi
 
-          CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.[0].conceptdoi // empty')
+          CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.[0].conceptrecid // empty')
           echo "Extracted Concept ID: ${CONCEPT_ID:-None}"
 
           # Create a new deposition if no Concept ID exists
@@ -86,7 +86,7 @@ jobs:
 
             echo "Created new deposition with ID: $DEPOSITION_ID"
             echo "Created new concept with ID: $CONCEPT_ID"
-            
+
           else
             DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.[0].id // empty')
             if [ -z "$DEPOSITION_ID" ]; then
