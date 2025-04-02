@@ -41,35 +41,43 @@ jobs:
           # Extract the latest Deposition ID and Concept ID
           DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.[0].id // empty')
           CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.[0].conceptrecid // empty')
+          STATE=$(echo "$RESPONSE" | jq -r '.[0].state // empty')
 
           if [ -z "$CONCEPT_ID" ]; then
-            echo "Error: No existing Concept ID found. Creating a new one."
+            echo "No existing Concept ID found. Creating a new one."
             NEW_RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions" \
               -H "Content-Type: application/json" \
               -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
               -d @.zenodo.json)
+
             DEPOSITION_ID=$(echo "$NEW_RESPONSE" | jq -r '.id // empty')
             CONCEPT_ID=$(echo "$NEW_RESPONSE" | jq -r '.conceptrecid // empty')
+
             if [ -z "$DEPOSITION_ID" ] || [ -z "$CONCEPT_ID" ]; then
               echo "Error: Failed to create new Concept ID."
               exit 1
             fi
           else
-            echo "Using existing Concept ID: $CONCEPT_ID"
-            
-            # Create a new version from existing deposition
-            VERSION_RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/actions/newversion" \
-              -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
+            echo "Using existing Concept ID: $CONCEPT_ID (Deposition ID: $DEPOSITION_ID, State: $STATE)"
 
-            NEW_DEPOSITION_ID=$(echo "$VERSION_RESPONSE" | jq -r '.links.latest_draft // empty' | awk -F'/' '{print $NF}')
-            if [ -z "$NEW_DEPOSITION_ID" ]; then
-              echo "Error: Failed to create new version."
-              exit 1
+            # Only create a new version if the deposition is published
+            if [ "$STATE" = "published" ]; then
+              echo "Creating a new version under Concept ID: $CONCEPT_ID"
+              VERSION_RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/actions/newversion" \
+                -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
+
+              NEW_DEPOSITION_ID=$(echo "$VERSION_RESPONSE" | jq -r '.links.latest_draft // empty' | awk -F'/' '{print $NF}')
+              
+              if [ -z "$NEW_DEPOSITION_ID" ] || [ "$NEW_DEPOSITION_ID" = "null" ]; then
+                echo "Error: Failed to create new version."
+                exit 1
+              fi
+              
+              DEPOSITION_ID=$NEW_DEPOSITION_ID
             fi
-            DEPOSITION_ID=$NEW_DEPOSITION_ID
           fi
 
-          echo "Created/Using Deposition ID: $DEPOSITION_ID"
+          echo "Using Deposition ID: $DEPOSITION_ID"
           echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
 
       - name: Upload the ZIP file to Zenodo
@@ -96,5 +104,3 @@ jobs:
             exit 1
           fi
           echo "Deposition published successfully."
-
-# testing
