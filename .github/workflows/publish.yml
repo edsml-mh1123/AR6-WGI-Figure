@@ -92,12 +92,16 @@ jobs:
             # Create a new version from existing deposition
             VERSION_RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/actions/newversion" \
               -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
+            
             NEW_DEPOSITION_ID=$(echo "$VERSION_RESPONSE" | jq -r '.id // empty')
+            
             if [ -z "$NEW_DEPOSITION_ID" ]; then
               echo "Error: Failed to create new version."
-              
+              exit 1
+            fi
+            
             DEPOSITION_ID=$NEW_DEPOSITION_ID
-            echo "Using new create deposition with ID: $DEPOSITION_ID"
+            echo "Using newly created deposition with ID: $DEPOSITION_ID"
           fi
 
           # Export DEPOSITION_ID for next steps
@@ -113,4 +117,4 @@ jobs:
           metadata: .zenodo.json
           publish: false
           sandbox: true
-          filenames: code
+          filenames: code.zip
