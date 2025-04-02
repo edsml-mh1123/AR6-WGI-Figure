@@ -15,16 +15,16 @@ jobs:
       - name: Checkout the contents of your repository
         uses: actions/checkout@v4
 
-      - name: Set Git User
-        run: |
-          echo "GIT_USER_EMAIL=your-email@example.com" >> $GITHUB_ENV
-          echo "GIT_USER_NAME=Your Name" >> $GITHUB_ENV
+      # - name: Set Git User
+      #   run: |
+      #     echo "GIT_USER_EMAIL=your-email@example.com" >> $GITHUB_ENV
+      #     echo "GIT_USER_NAME=Your Name" >> $GITHUB_ENV
       
-      - name: Set up Git authentication
-        run: |
-          git config --global user.email "${GIT_USER_EMAIL}"
-          git config --global user.name "${GIT_USER_NAME}"
-          git remote set-url origin https://github-actions:${{ secrets.GH_TOKEN }}@github.com/edsml-mh1123/ar7-wg1-fod-ch99-fig99.git
+      # - name: Set up Git authentication
+      #   run: |
+      #     git config --global user.email "${GIT_USER_EMAIL}"
+      #     git config --global user.name "${GIT_USER_NAME}"
+      #     git remote set-url origin https://github-actions:${{ secrets.GH_TOKEN }}@github.com/edsml-mh1123/ar7-wg1-fod-ch99-fig99.git
 
       - name: Create ZIP of code folder
         run: zip -r code.zip code/
@@ -55,27 +55,29 @@ jobs:
             # Extract the concept_id from the response
             concept_id=$(echo $response | jq -r '.id')
             deposition_id=$(echo $response | jq -r '.conceptrecid')
+
+            echo "New concept_id: $concept_id"
       
-            # Save the concept_id to .zenodo.json for future use
-            if jq --arg concept_id "$concept_id" '.metadata.id = [$concept_id]' .zenodo.json > .zenodo.json.tmp; then
-              mv .zenodo.json.tmp .zenodo.json
-              echo "concept_id successfully saved to .zenodo.json."
+            # # Save the concept_id to .zenodo.json for future use
+            # if jq --arg concept_id "$concept_id" '.metadata.id = [$concept_id]' .zenodo.json > .zenodo.json.tmp; then
+            #   mv .zenodo.json.tmp .zenodo.json
+            #   echo "concept_id successfully saved to .zenodo.json."
               
-              # Automatically set Git user name and email using environment variables
-              git config --global user.email "${GIT_USER_EMAIL:-your-email@example.com}"
-              git config --global user.name "${GIT_USER_NAME:-Your Name}"
+            #   # Automatically set Git user name and email using environment variables
+            #   git config --global user.email "${GIT_USER_EMAIL:-your-email@example.com}"
+            #   git config --global user.name "${GIT_USER_NAME:-Your Name}"
 
-              # Stage the .zenodo.json file for commit
-              git add .zenodo.json
+            #   # Stage the .zenodo.json file for commit
+            #   git add .zenodo.json
 
-              # Commit the changes with a message
-              git commit -m "Update concept_id in .zenodo.json"
+            #   # Commit the changes with a message
+            #   git commit -m "Update concept_id in .zenodo.json"
 
-              # Push the changes to GitHub (make sure you're on the correct branch)
-              git push origin $(git rev-parse --abbrev-ref HEAD)
-            else
-              echo "Failed to update .zenodo.json."
-              exit 1
+            #   # Push the changes to GitHub (make sure you're on the correct branch)
+            #   git push origin $(git rev-parse --abbrev-ref HEAD)
+            # else
+            #   echo "Failed to update .zenodo.json."
+            #   exit 1
             fi
 
           # with concept_id found, update the existing deposition
