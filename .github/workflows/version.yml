@@ -17,7 +17,7 @@ jobs:
       - name: Check version consistency
         run: |
           CFF_VERSION=$(yq '.version' CITATION.cff)
-          ZENODO_VERSION=$(jq '.version' .zenodo.json)
+          ZENODO_VERSION=$(jq -r '.version' .zenodo.json) # Use -r to remove quotes
           if [ "$CFF_VERSION" != "$ZENODO_VERSION" ]; then
             echo "Version mismatch detected!"
             echo "CITATION.cff version: $CFF_VERSION"
@@ -25,6 +25,11 @@ jobs:
             exit 1
           fi
       
+      - name: Debug version variables
+        run: |
+          echo "CFF_VERSION=$CFF_VERSION"
+          echo "ZENODO_VERSION=$ZENODO_VERSION"
+        
       - uses: ipcc-ar7/publish-zenodo@v1.9
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
