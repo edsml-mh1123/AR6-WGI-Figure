@@ -18,7 +18,7 @@ jobs:
       - name: Create ZIP of code folder
         run: zip -r code.zip code/
 
-      - name: Get or create Zenodo Concept, with new deposition
+      - name: Get or create Zenodo Concept, with new Deposition
         id: zenodo_deposition
         env:
           ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
@@ -29,16 +29,40 @@ jobs:
             exit 1
           fi
       
-          # Define the existing Concept DOI (replace with actual if needed)
-          CONCEPT_DOI="10.5072/zenodo.193485"
+          # Fetch existing depositions from Zenodo API
+          RESPONSE=$(curl -s -X GET "https://sandbox.zenodo.org/api/deposit/depositions" \
+            -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
       
-          echo "Using Concept DOI: $CONCEPT_DOI"
+          if [[ $? -ne 0 || -z "$RESPONSE" ]]; then
+            echo "Error fetching deposition list from Zenodo."
+            exit 1
+          fi
       
+          echo "Zenodo API Response: $RESPONSE"
+      
+          # Validate JSON response
+          if ! echo "$RESPONSE" | jq . >/dev/null 2>&1; then
+            echo "Error: Invalid JSON response from Zenodo API."
+            exit 1
+          fi
+      
+          # Extract the Concept ID from the response
+          CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.[0].conceptdoi // empty')
+      
+          if [ -z "$CONCEPT_ID" ]; then
+            echo "Error: Failed to extract existing Concept ID."
+            exit 1
+          fi
+      
+          echo "Extracted Concept ID: $CONCEPT_ID"
+          
           # Create a new deposition under this concept
+          echo "Creating a new deposition under Concept DOI: $CONCEPT_ID"
+      
           RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions" \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
-            -d "{\"metadata\": {\"prereserve_doi\": true, \"title\": \"Your Project Title\", \"upload_type\": \"software\", \"description\": \"Your description here\", \"creators\": [{\"name\": \"Your Name\"}], \"conceptdoi\": \"$CONCEPT_DOI\"}}")
+            -d "{\"metadata\": {\"prereserve_doi\": true, \"title\": \"Your Project Title\", \"upload_type\": \"software\", \"description\": \"Your description here\", \"creators\": [{\"name\": \"Your Name\"}], \"conceptdoi\": \"$CONCEPT_ID\"}}")
       
           if [[ $? -ne 0 || -z "$RESPONSE" ]]; then
             echo "Error creating new deposition."
