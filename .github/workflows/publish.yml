@@ -44,63 +44,83 @@ jobs:
             echo "Error: ZENODO_ACCESS_TOKEN is not set."
             exit 1
           fi
-
+      
+          echo "Token length: ${#ZENODO_ACCESS_TOKEN}"
+      
           # Fetch existing depositions from Zenodo API
           RESPONSE=$(curl -s -X GET "https://sandbox.zenodo.org/api/deposit/depositions" \
             -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
+      
           if [[ $? -ne 0 || -z "$RESPONSE" ]]; then
             echo "Error fetching deposition list from Zenodo."
             exit 1
           fi
-
+      
+          # Print response for debugging
+          echo "Zenodo API Response: $RESPONSE"
+      
           # Validate response and extract Concept ID
           if ! echo "$RESPONSE" | jq . >/dev/null 2>&1; then
             echo "Error: Invalid JSON response from Zenodo API."
             exit 1
           fi
-
-          CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.[] | select(.metadata.prereserve_doi != null) | .conceptdoi' | head -n 1)
-          echo "Concept ID: ${CONCEPT_ID:-None}"
-
+      
+          CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.[0].conceptdoi' 2>/dev/null)
+          echo "Extracted Concept ID: ${CONCEPT_ID:-None}"
+      
           # Create a new deposition if no Concept ID exists
-          if [ -z "$CONCEPT_ID" ]; then
+          if [ -z "$CONCEPT_ID" ] || [ "$CONCEPT_ID" == "null" ]; then
             echo "No existing deposition found with prereserved DOI. Creating a new deposition..."
+      
+            # Check if .zenodo.json exists
+            if [ ! -f .zenodo.json ]; then
+              echo "Error: .zenodo.json file not found."
+              exit 1
+            fi
+      
+            echo "Contents of .zenodo.json:"
+            cat .zenodo.json
+      
             RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions" \
               -H "Content-Type: application/json" \
               -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
               -d @.zenodo.json)
+      
             if [[ $? -ne 0 || -z "$RESPONSE" ]]; then
               echo "Error creating new deposition."
               exit 1
             fi
-
+      
+            # Print response for debugging
+            echo "Zenodo API Response: $RESPONSE"
+      
             # Validate response and extract Deposition ID
             if ! echo "$RESPONSE" | jq . >/dev/null 2>&1; then
               echo "Error: Invalid JSON response when creating deposition."
               exit 1
             fi
-
-            DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.id')
-            if [ -z "$DEPOSITION_ID" ]; then
+      
+            DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.id' 2>/dev/null)
+            if [ -z "$DEPOSITION_ID" ] || [ "$DEPOSITION_ID" == "null" ]; then
               echo "Error: Failed to retrieve Deposition ID after creation."
               exit 1
             fi
-
+      
             echo "Created new deposition with ID: $DEPOSITION_ID"
           else
-            DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.[] | select(.metadata.prereserve_doi != null) | .id' | head -n 1)
-            if [ -z "$DEPOSITION_ID" ]; then
+            DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.[0].id' 2>/dev/null)
+            if [ -z "$DEPOSITION_ID" ] || [ "$DEPOSITION_ID" == "null" ]; then
               echo "Error: Failed to retrieve Deposition ID from existing depositions."
               exit 1
             fi
-
+      
             echo "Using existing deposition with ID: $DEPOSITION_ID"
           fi
-
+      
           # Export DEPOSITION_ID to GitHub environment variables for subsequent steps
           echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
-
       
+    
       - name: Upload the ZIP file to Zenodo
         env:
           ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
