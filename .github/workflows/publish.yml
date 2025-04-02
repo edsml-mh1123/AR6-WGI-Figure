@@ -84,17 +84,15 @@ jobs:
             -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
             -F "file=@code.zip;filename=code.zip"
 
-      # - name: Publish the Zenodo deposition
-      #   if: success()
-      #   env:
-      #     ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
-      #   run: |
-      #     RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/actions/publish" \
-      #       -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
-      #     if [[ $? -ne 0 ]]; then
-      #       echo "Error publishing the deposition."
-      #       exit 1
-      #     fi
-      #     echo "Deposition published successfully."
-      
-      #testing
+      - name: Publish the Zenodo deposition
+        if: success()
+        env:
+          ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
+        run: |
+          RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/actions/publish" \
+            -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
+          if [[ $? -ne 0 ]]; then
+            echo "Error publishing the deposition."
+            exit 1
+          fi
+          echo "Deposition published successfully."
