@@ -122,14 +122,14 @@ jobs:
             -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
             -F "file=@code.zip;filename=code.zip"
   
-      - name: Check if code.zip exists
-        run: |
-          if [ -f "code.zip" ]; then
-            echo "code.zip exists."
-          else
-            echo "code.zip does not exist."
-            exit 1
-          fi
+      # - name: Check if code.zip exists
+      #   run: |
+      #     if [ -f "code.zip" ]; then
+      #       echo "code.zip exists."
+      #     else
+      #       echo "code.zip does not exist."
+      #       exit 1
+      #     fi
 
       - name: Keep in Draft Mode
         env:
