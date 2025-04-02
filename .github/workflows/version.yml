@@ -28,5 +28,5 @@ jobs:
           sandbox: true
           verbose: true
           compression: zip
-          filenames: code
+          filenames: ./code
           
