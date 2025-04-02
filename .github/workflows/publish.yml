@@ -49,6 +49,14 @@ jobs:
             if jq --arg concept_id "$concept_id" '.metadata.id = [$concept_id]' .zenodo.json > .zenodo.json.tmp; then
               mv .zenodo.json.tmp .zenodo.json
               echo "concept_id successfully saved to .zenodo.json."
+              
+              # Stage the .zenodo.json file for commit
+              git add .zenodo.json
+              # Commit the changes with a message
+              git commit -m "Update concept_id in .zenodo.json"
+              # Push the changes to GitHub (make sure you're on the correct branch)
+              git push origin $(git rev-parse --abbrev-ref HEAD)
+              
             else
               echo "Failed to update .zenodo.json."
               exit 1
