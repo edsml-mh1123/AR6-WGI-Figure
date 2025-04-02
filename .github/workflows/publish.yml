@@ -17,84 +17,55 @@ jobs:
       - name: Create ZIP of Code Folder
         run: zip -r code.zip code/
 
-      - name: Get Existing Concept ID or Create New Deposition
+      - name: Get or Create Concept and Deposition on Zenodo
         id: zenodo_deposition
         env:
           ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
+          ZENODO_API_URL: "https://sandbox.zenodo.org/api/deposit/depositions"
         run: |
           if [ -z "$ZENODO_ACCESS_TOKEN" ]; then
             echo "Error: ZENODO_ACCESS_TOKEN is not set."
             exit 1
           fi
 
-          # Fetch existing depositions
-          RESPONSE=$(curl -s -X GET "https://sandbox.zenodo.org/api/deposit/depositions" \
-            -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
+          # Fetch existing depositions (check if there's an existing Concept)
+          RESPONSE=$(curl -s -X GET "$ZENODO_API_URL" -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
 
-          # Log the response to understand why it's failing
-          echo "Response from Zenodo: $RESPONSE"
-
-          # Check if we have any existing depositions
+          # Check if there's an existing Concept, else create a new one
           if [ "$(echo "$RESPONSE" | jq length)" -eq 0 ]; then
-            echo "No existing depositions found. Creating a new one..."
-            CREATE_RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions" \
+            echo "No existing depositions found. Creating a new Concept and Deposition..."
+            RESPONSE=$(curl -s -X POST "$ZENODO_API_URL" \
               -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
               -H "Content-Type: application/json" \
               --data '{}')
-
-            DEPOSITION_ID=$(echo "$CREATE_RESPONSE" | jq -r '.id')
-            CONCEPT_ID=$(echo "$CREATE_RESPONSE" | jq -r '.conceptrecid')
-
-            if [ -z "$DEPOSITION_ID" ] || [ "$DEPOSITION_ID" = "null" ]; then
-              echo "Error: Failed to create a new deposition."
-              exit 1
-            fi
-          else
-            # Use the existing Concept ID and create a new Deposition
-            CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.[0].conceptrecid')
-
-            if [ -z "$CONCEPT_ID" ]; then
-              echo "Error: No Concept ID found. Exiting."
-              exit 1
-            fi
-
-            echo "Using existing Concept ID: $CONCEPT_ID"
-
-            CREATE_NEW_DEPOSITION_RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions" \
-              -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
-              -H "Content-Type: application/json" \
-              --data '{"conceptrecid": "'"$CONCEPT_ID"'"}')
-
-            # Log the response for debugging
-            echo "Create new deposition response: $CREATE_NEW_DEPOSITION_RESPONSE"
-
-            DEPOSITION_ID=$(echo "$CREATE_NEW_DEPOSITION_RESPONSE" | jq -r '.id')
-
-            if [ -z "$DEPOSITION_ID" ] || [ "$DEPOSITION_ID" = "null" ]; then
-              echo "Error: Failed to create a new deposition under the existing Concept."
-              exit 1
-            fi
           fi
 
-          echo "Final Deposition ID: $DEPOSITION_ID"
+          # Parse the Concept ID and Deposition ID
+          CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.conceptrecid')
+          DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.id')
+
+          if [ -z "$CONCEPT_ID" ] || [ "$CONCEPT_ID" = "null" ]; then
+            echo "Error: Failed to fetch or create Concept."
+            exit 1
+          fi
+
+          echo "Using Concept ID: $CONCEPT_ID"
           echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
 
       - name: Upload ZIP to Zenodo
         env:
           ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
+          ZENODO_API_URL: "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/files"
         run: |
           if [ ! -f "code.zip" ]; then
             echo "Error: code.zip not found!"
             exit 1
           fi
 
-          UPLOAD_URL="https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/files"
-          RESPONSE=$(curl -s -X POST "$UPLOAD_URL" \
+          # Upload the new version (ZIP file)
+          RESPONSE=$(curl -s -X POST "$ZENODO_API_URL" \
             -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
             -F "file=@code.zip;filename=code.zip")
-
-          # Log the upload response to debug
-          echo "Upload response: $RESPONSE"
 
           if [ "$(echo "$RESPONSE" | jq -r '.checksum')" = "null" ]; then
             echo "Error: Upload failed."
@@ -103,20 +74,18 @@ jobs:
 
           echo "File uploaded successfully."
 
-      - name: Publish Deposition on Zenodo
+      - name: Publish Deposition as a New Version
         if: success()
         env:
           ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
+          ZENODO_API_URL: "https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/actions/publish"
         run: |
-          PUBLISH_URL="https://sandbox.zenodo.org/api/deposit/depositions/$DEPOSITION_ID/actions/publish"
-          RESPONSE=$(curl -s -X POST "$PUBLISH_URL" -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
-
-          # Log the publish response
-          echo "Publish response: $RESPONSE"
+          # Publish the new deposition (version)
+          RESPONSE=$(curl -s -X POST "$ZENODO_API_URL" -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
 
           if [ "$(echo "$RESPONSE" | jq -r '.submitted')" != "true" ]; then
             echo "Error: Publishing failed."
             exit 1
           fi
 
-          echo "Deposition published successfully."
+          echo "Deposition (new version) published successfully."
