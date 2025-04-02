@@ -1,6 +1,7 @@
 name: Version release to Zenodo
 
 on:
+  pull_request:
   push:
     tags:
       - "v*.*.*"
