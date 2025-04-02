@@ -78,12 +78,15 @@ jobs:
             echo "Zenodo API Response: $RESPONSE"
 
             DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.id // empty')
+            CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.conceptrecid // empty')
             if [ -z "$DEPOSITION_ID" ]; then
               echo "Error: Failed to retrieve Deposition ID."
               exit 1
             fi
 
             echo "Created new deposition with ID: $DEPOSITION_ID"
+            echo "Created new concept with ID: $CONCEPT_ID"
+            
           else
             DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.[0].id // empty')
             if [ -z "$DEPOSITION_ID" ]; then
