@@ -34,24 +34,22 @@ jobs:
           # Log the full response for debugging
           echo "Zenodo Response: $RESPONSE"
       
-          # Check if the response is an array or object and parse accordingly
+          # Check if the response contains any existing Concept (Concept ID)
           if echo "$RESPONSE" | jq 'type' | grep -q '"array"'; then
-            # If the response is an array, proceed with your logic
+            # If the response is an array, check if there is an existing Concept
             if [ "$(echo "$RESPONSE" | jq length)" -eq 0 ]; then
-              echo "No existing depositions found. Creating a new Concept and Deposition..."
+              echo "No existing Concept found. Creating a new Concept..."
               RESPONSE=$(curl -s -X POST "$ZENODO_API_URL" \
                 -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
                 -H "Content-Type: application/json" \
                 --data '{}')
             fi
       
-            # Parse the Concept ID and Deposition ID
+            # Parse the Concept ID (use existing or newly created one)
             CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.[0].conceptrecid')
-            DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.[0].id')
           else
             # If the response is an object, parse it accordingly
             CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.conceptrecid')
-            DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.id')
           fi
       
           if [ -z "$CONCEPT_ID" ] || [ "$CONCEPT_ID" = "null" ]; then
@@ -59,8 +57,30 @@ jobs:
             exit 1
           fi
       
+          # Print the Concept ID
           echo "Using Concept ID: $CONCEPT_ID"
-          echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_ENV
+      
+          # Create a new Deposition with the existing or newly created Concept
+          echo "Creating a new Deposition..."
+          NEW_DEPOSITION=$(curl -s -X POST "$ZENODO_API_URL" \
+            -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data '{"conceptrecid": "'"$CONCEPT_ID"'"}')
+      
+          # Parse the new Deposition ID
+          NEW_DEPOSITION_ID=$(echo "$NEW_DEPOSITION" | jq -r '.id')
+      
+          if [ -z "$NEW_DEPOSITION_ID" ] || [ "$NEW_DEPOSITION_ID" = "null" ]; then
+            echo "Error: Failed to create Deposition."
+            exit 1
+          fi
+      
+          # Print the new Deposition ID
+          echo "New Deposition ID: $NEW_DEPOSITION_ID"
+      
+          # Set the environment variables for further steps
+          echo "CONCEPT_ID=$CONCEPT_ID" >> $GITHUB_ENV
+          echo "DEPOSITION_ID=$NEW_DEPOSITION_ID" >> $GITHUB_ENV
       
       - name: Upload ZIP to Zenodo
         env:
