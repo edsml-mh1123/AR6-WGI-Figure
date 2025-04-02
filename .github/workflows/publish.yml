@@ -41,7 +41,7 @@ jobs:
           fi
       
           # Extract Concept ID if it exists
-          CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.[0].id // empty')
+          CONCEPT_ID=$(echo "$RESPONSE" | jq -r '.[0].conceptrecid // empty')
       
           if [ -z "$CONCEPT_ID" ]; then
             echo "No existing deposition found. Creating a new deposition..."
@@ -64,7 +64,6 @@ jobs:
             echo "Found existing Concept ID: $CONCEPT_ID"
             
             # Create a new version of the existing deposition
-
             NEW_VERSION_RESPONSE=$(curl -s -X POST "https://sandbox.zenodo.org/api/deposit/depositions/$CONCEPT_ID/actions/newversion" \
               -H "Authorization: Bearer $ZENODO_ACCESS_TOKEN")
       
