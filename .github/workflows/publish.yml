@@ -15,17 +15,6 @@ jobs:
       - name: Checkout the contents of your repository
         uses: actions/checkout@v4
 
-      # - name: Set Git User
-      #   run: |
-      #     echo "GIT_USER_EMAIL=your-email@example.com" >> $GITHUB_ENV
-      #     echo "GIT_USER_NAME=Your Name" >> $GITHUB_ENV
-      
-      # - name: Set up Git authentication
-      #   run: |
-      #     git config --global user.email "${GIT_USER_EMAIL}"
-      #     git config --global user.name "${GIT_USER_NAME}"
-      #     git remote set-url origin https://github-actions:${{ secrets.GH_TOKEN }}@github.com/edsml-mh1123/ar7-wg1-fod-ch99-fig99.git
-
       - name: Create ZIP of code folder
         run: zip -r code.zip code/
 
@@ -36,7 +25,7 @@ jobs:
         run: |
           # Check if .zenodo.json exists and contains a concept_id
           if [ -f ".zenodo.json" ]; then
-            concept_id=$(jq -r '.metadata.id[0]' .zenodo.json 2>/dev/null)
+            concept_id=$(jq -r '.metadata.id' .zenodo.json 2>/dev/null)
           else
             concept_id="null"
           fi
@@ -44,29 +33,33 @@ jobs:
           # If no concept_id found, create a new deposition
           if [ "$concept_id" == "null" ] || [ -z "$concept_id" ]; then
             echo "No concept_id found, creating a new deposition."
-      
+
             # Create a new deposition via Zenodo API
             response=$(curl -s -X POST "https://zenodo.org/api/deposit/depositions" \
               -H "Authorization: Bearer $ZENODO_SANDBOX_ACCESS_TOKEN" \
               -H "Content-Type: application/json" \
               --data-binary @.zenodo.json)
-      
+
             # Check if the API call was successful
-            if [ $? -ne 0 ] || [ -z "$(echo "$response" | jq -r '.id')" ]; then
-              echo "Error: Failed to create deposition."
+            if [ $? -ne 0 ]; then
+              echo "Error: Failed to make API call."
               exit 1
             fi
-      
-            # Extract the concept_id and deposition_id from the response
-            concept_id=$(echo "$response" | jq -r '.id')
-            deposition_id=$(echo "$response" | jq -r '.conceptrecid')
-      
+
+            # Check if the response contains valid JSON and extract IDs
+            concept_id=$(echo "$response" | jq -r '.conceptrecid // empty')
+            deposition_id=$(echo "$response" | jq -r '.id // empty')
+
+            if [ -z "$concept_id" ] || [ -z "$deposition_id" ]; then
+              echo "Error: Failed to extract concept_id or deposition_id from the response."
+              echo "Response from API: $response"
+              exit 1
+            fi
+
             echo "New concept_id: $concept_id"
             echo "New deposition_id: $deposition_id"
-          else
-            echo "Using existing concept_id: $concept_id"
           fi
-      
+
         # # with concept_id found, update the existing deposition
         # else
         #   echo "Concept ID already exists, updating deposition."
