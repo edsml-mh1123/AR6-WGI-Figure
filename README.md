@@ -19,7 +19,6 @@ From the IPCC Working Group I Contribution to the Sixth Assessment Report: Chapt
   - [Option 1: Run on Binder (No Installation Needed)](#option-1-run-on-binder-no-installation-needed)
   - [Option 2: Local Installation](#option-2-local-installation)
 - [Expected image path](#expected-image-path)
-- [Software and hardware information](#software-and-hardware-information)
 - [Publication sources](#publication-sources)
 - [How to cite](#how-to-cite) 
   - [Figure Citation](#figure-citation)
@@ -83,14 +82,6 @@ python download_data.py
 
 - recipe_ipccwg1ar6ch3_atmosphere_YYYYMMDD_HHMMSS/plots/fig_3_3_cmip5/fig_3_3/model_bias_tas_annualclim_CMIP5.eps
 - recipe_ipccwg1ar6ch3_atmosphere_YYYYMMDD_HHMMSS/plots/fig_3_3_cmip6/fig_3_3/model_bias_tas_annualclim_CMIP6.eps
-
-
-## Software and Hardware Information
-
-The software and hardware details for the system are included in the `system_description.yml` file. This file contains the following:
-
-- **Software descriptions** (e.g., environment files for ESMValTool and pip)
-- **Hardware descriptions** (e.g., machine used)
 
 
 ## Publication sources
