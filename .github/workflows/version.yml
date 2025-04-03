@@ -14,48 +14,33 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Check version consistency
-        run: |
-          CFF_VERSION=$(yq '.version' CITATION.cff)
-          ZENODO_VERSION=$(jq -r '.version' .zenodo.json) # Use -r to remove quotes
-          if [ "$CFF_VERSION" != "$ZENODO_VERSION" ]; then
-            echo "Version mismatch detected!"
-            echo "CITATION.cff version: $CFF_VERSION"
-            echo ".zenodo.json version: $ZENODO_VERSION"
-            exit 1
-          fi
-      
-      - name: Debug version variables
-        run: |
-          echo "CFF_VERSION=$CFF_VERSION"
-          echo "ZENODO_VERSION=$ZENODO_VERSION"
-        
-      - uses: ipcc-ar7/publish-zenodo@v1.9
+      - name: Upload code to Zenodo
+        uses: zenodraft/action@0.13.3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ZENODO_SANDBOX_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
         with:
-          # Note that Zenodo only accepts root level files.
-          files: |
-            ./code
-          metadata: version_metadata.yml
-          sandbox: true
-          publish: true
+          # concept: $CONCEPT_ID
           concept: 193507
+          metadata: .zenodo.json
+          publish: true
+          sandbox: true
           verbose: true
+          compression: zip
 
-    # - name: Upload code to Zenodo
-    #     uses: zenodraft/action@0.13.3
-    #     env:
-    #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    #       ZENODO_SANDBOX_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
-    #     with:
-    #       # concept: $CONCEPT_ID
-    #       concept: 193507
-    #       metadata: .zenodo.json
-    #       publish: true
-    #       sandbox: true
-    #       verbose: true
-    #       compression: zip
-    #       filenames: ./code
-          
+
+      # - uses: ipcc-ar7/publish-zenodo@v1.9
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     ZENODO_SANDBOX_ACCESS_TOKEN: ${{ secrets.ZENODO_SANDBOX_ACCESS_TOKEN }}
+      #   with:
+      #     # Note that Zenodo only accepts root level files.
+      #     files: |
+      #       ./code
+      #     metadata: version_metadata.yml
+      #     sandbox: true
+      #     publish: true
+      #     concept: 193507
+      #     verbose: true
+
+            
